@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/HotelReservationSystem.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/User.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Customer.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Admin.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Room.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Booking.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Payment.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/CashPayment.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/CardPayment.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Report.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/FileManager.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/CustomerDAO.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/RoomDAO.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/BookingDAO.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/PaymentDAO.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/StyleConfig.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/LoginForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/RegisterForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/CustomerDashboard.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/BookingForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/PaymentForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/CancelBookingForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/AdminDashboard.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/ReportPanel.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/ValidationUtil.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/DateUtil.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/ReportGenerator.java</file>
+        </group>
+    </open-files>
+</project-private>
