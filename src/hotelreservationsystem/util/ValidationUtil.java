@@ -98,6 +98,22 @@ public class ValidationUtil {
     }
     
     /**
+     * Validate booking dates format and logic
+     * @param checkInDateStr Check-in date string in yyyy-MM-dd format
+     * @param checkOutDateStr Check-out date string in yyyy-MM-dd format
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidBookingDateStrings(String checkInDateStr, String checkOutDateStr) {
+        try {
+            Date checkInDate = DateUtil.parseCheckInDate(checkInDateStr);
+            Date checkOutDate = DateUtil.parseCheckOutDate(checkOutDateStr);
+            return isValidBookingDates(checkInDate, checkOutDate);
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+    
+    /**
      * Validate credit card number
      * @param cardNumber Credit card number to validate
      * @return true if valid, false otherwise

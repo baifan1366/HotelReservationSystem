@@ -30,6 +30,11 @@
             <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/ValidationUtil.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/DateUtil.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/util/ReportGenerator.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/AdminDAO.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/RoomDetailsDialog.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/ui/CommentForm.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/model/Comment.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/%20HotelReservationSystem/src/hotelreservationsystem/dao/CommentDAO.java</file>
         </group>
     </open-files>
 </project-private>

@@ -73,6 +73,24 @@ public class BookingForm extends JFrame implements ActionListener {
         // Create form panel
         JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
         
+        // Check-in date field
+        JLabel checkInDateLabel = new JLabel("Check-in Date (3:00 PM):");
+        checkInDateField = new JTextField(DateUtil.getTodayAsString());
+        checkInDateField.addActionListener(this);
+        StyleConfig.applyStyle(checkInDateLabel);
+        StyleConfig.applyStyle(checkInDateField);
+        formPanel.add(checkInDateLabel);
+        formPanel.add(checkInDateField);
+        
+        // Check-out date field
+        JLabel checkOutDateLabel = new JLabel("Check-out Date (12:00 PM):");
+        checkOutDateField = new JTextField();
+        checkOutDateField.addActionListener(this);
+        StyleConfig.applyStyle(checkOutDateLabel);
+        StyleConfig.applyStyle(checkOutDateField);
+        formPanel.add(checkOutDateLabel);
+        formPanel.add(checkOutDateField);
+        
         // Room type combo box
         JLabel roomTypeLabel = new JLabel("Room Type:");
         roomTypeComboBox = new JComboBox<>(new String[]{"Single", "Double", "Suite"});
@@ -84,27 +102,10 @@ public class BookingForm extends JFrame implements ActionListener {
         // Room number combo box
         JLabel roomNumberLabel = new JLabel("Room Number:");
         roomNumberComboBox = new JComboBox<>();
+        roomNumberComboBox.addActionListener(this);
         StyleConfig.applyStyle(roomNumberLabel);
         formPanel.add(roomNumberLabel);
         formPanel.add(roomNumberComboBox);
-        
-        // Check-in date field
-        JLabel checkInDateLabel = new JLabel("Check-in Date (yyyy-MM-dd):");
-        checkInDateField = new JTextField(DateUtil.getTodayAsString());
-        checkInDateField.addActionListener(this);
-        StyleConfig.applyStyle(checkInDateLabel);
-        StyleConfig.applyStyle(checkInDateField);
-        formPanel.add(checkInDateLabel);
-        formPanel.add(checkInDateField);
-        
-        // Check-out date field
-        JLabel checkOutDateLabel = new JLabel("Check-out Date (yyyy-MM-dd):");
-        checkOutDateField = new JTextField();
-        checkOutDateField.addActionListener(this);
-        StyleConfig.applyStyle(checkOutDateLabel);
-        StyleConfig.applyStyle(checkOutDateField);
-        formPanel.add(checkOutDateLabel);
-        formPanel.add(checkOutDateField);
         
         // Total amount label
         JLabel totalLabel = new JLabel("Total Amount:");
@@ -113,9 +114,6 @@ public class BookingForm extends JFrame implements ActionListener {
         StyleConfig.applyHeadingStyle(totalAmountLabel);
         formPanel.add(totalLabel);
         formPanel.add(totalAmountLabel);
-        
-        // Update room numbers now that totalAmountLabel is initialized
-        updateRoomNumbers();
         
         // Button panel
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
@@ -146,23 +144,82 @@ public class BookingForm extends JFrame implements ActionListener {
     }
     
     private void updateRoomNumbers() {
-        String selectedType = (String) roomTypeComboBox.getSelectedItem();
-        Room[] rooms = roomDAO.getRoomsByType(selectedType);
+        try {
+            // Validate dates first
+            Date checkInDate = DateUtil.parseCheckInDate(checkInDateField.getText());
+            Date checkOutDate = DateUtil.parseCheckOutDate(checkOutDateField.getText());
+            
+            if (!ValidationUtil.isValidBookingDates(checkInDate, checkOutDate)) {
+                JOptionPane.showMessageDialog(this, 
+                        "Invalid dates. Check-in date must be today or in the future and check-out date must be after check-in date.", 
+                        "Date Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                roomNumberComboBox.removeAllItems();
+                totalAmountLabel.setText("$0.00");
+                return;
+            }
+            
+            String selectedType = (String) roomTypeComboBox.getSelectedItem();
+            Room[] rooms = roomDAO.getRoomsByType(selectedType);
+            
+            DefaultComboBoxModel<Integer> model = new DefaultComboBoxModel<>();
+            
+            for (Room room : rooms) {
+                if (room != null && isRoomAvailableForDates(room.getRoomNumber(), checkInDate, checkOutDate)) {
+                    model.addElement(room.getRoomNumber());
+                }
+            }
+            
+            roomNumberComboBox.setModel(model);
+            
+            // Update total amount if we have room numbers
+            if (model.getSize() > 0) {
+                calculateTotalAmount();
+            } else {
+                totalAmountLabel.setText("No rooms available");
+            }
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(this, 
+                    "Invalid date format. Please use yyyy-MM-dd", 
+                    "Date Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            roomNumberComboBox.removeAllItems();
+            totalAmountLabel.setText("$0.00");
+        }
+    }
+    
+    private boolean isRoomAvailableForDates(int roomNumber, Date checkIn, Date checkOut) {
+        // Get all bookings for this room
+        Booking[] bookings = bookingDAO.getBookingsByRoomNumber(roomNumber);
         
-        DefaultComboBoxModel<Integer> model = new DefaultComboBoxModel<>();
-        
-        for (Room room : rooms) {
-            if (room != null && room.isAvailable()) {
-                model.addElement(room.getRoomNumber());
+        // Check for date conflicts
+        for (Booking booking : bookings) {
+            if (booking != null) {
+                // Check if there's an overlap in dates
+                Date bookedCheckIn = booking.getCheckInDate();
+                Date bookedCheckOut = booking.getCheckOutDate();
+                
+                // If check-in date falls between an existing booking
+                if ((checkIn.after(bookedCheckIn) || checkIn.equals(bookedCheckIn)) && 
+                    checkIn.before(bookedCheckOut)) {
+                    return false;
+                }
+                
+                // If check-out date falls between an existing booking
+                if (checkOut.after(bookedCheckIn) && 
+                    (checkOut.before(bookedCheckOut) || checkOut.equals(bookedCheckOut))) {
+                    return false;
+                }
+                
+                // If booking period completely contains an existing booking
+                if ((checkIn.before(bookedCheckIn) || checkIn.equals(bookedCheckIn)) && 
+                    (checkOut.after(bookedCheckOut) || checkOut.equals(bookedCheckOut))) {
+                    return false;
+                }
             }
         }
         
-        roomNumberComboBox.setModel(model);
-        
-        // Update total amount if we have room numbers
-        if (model.getSize() > 0) {
-            calculateTotalAmount();
-        }
+        return true;
     }
     
     private void calculateTotalAmount() {
@@ -183,8 +240,8 @@ public class BookingForm extends JFrame implements ActionListener {
             Room room = roomDAO.findRoomByNumber(roomNumber);
             
             // Get dates
-            Date checkInDate = DateUtil.parseDate(checkInDateField.getText());
-            Date checkOutDate = DateUtil.parseDate(checkOutDateField.getText());
+            Date checkInDate = DateUtil.parseCheckInDate(checkInDateField.getText());
+            Date checkOutDate = DateUtil.parseCheckOutDate(checkOutDateField.getText());
             
             // Validate dates
             if (!ValidationUtil.isValidBookingDates(checkInDate, checkOutDate)) {
@@ -209,9 +266,19 @@ public class BookingForm extends JFrame implements ActionListener {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == roomTypeComboBox) {
-            updateRoomNumbers();
-        } else if (e.getSource() == checkInDateField || e.getSource() == checkOutDateField) {
+        if (e.getSource() == checkInDateField || e.getSource() == checkOutDateField) {
+            if (!checkInDateField.getText().trim().isEmpty() && !checkOutDateField.getText().trim().isEmpty()) {
+                // Reset room selections when dates change
+                roomTypeComboBox.setSelectedIndex(0);
+                roomNumberComboBox.removeAllItems();
+                totalAmountLabel.setText("$0.00");
+                updateRoomNumbers();
+            }
+        } else if (e.getSource() == roomTypeComboBox) {
+            if (!checkInDateField.getText().trim().isEmpty() && !checkOutDateField.getText().trim().isEmpty()) {
+                updateRoomNumbers();
+            }
+        } else if (e.getSource() == roomNumberComboBox) {
             calculateTotalAmount();
         } else if (e.getSource() == bookButton) {
             bookRoom();
@@ -223,7 +290,7 @@ public class BookingForm extends JFrame implements ActionListener {
     private void bookRoom() {
         if (roomNumberComboBox.getItemCount() == 0) {
             JOptionPane.showMessageDialog(this, 
-                    "No rooms available for selected type", 
+                    "No rooms available for selected type and dates", 
                     "Booking Error", 
                     JOptionPane.ERROR_MESSAGE);
             return;
@@ -235,15 +302,25 @@ public class BookingForm extends JFrame implements ActionListener {
             Room room = roomDAO.findRoomByNumber(roomNumber);
             
             // Get dates
-            Date checkInDate = DateUtil.parseDate(checkInDateField.getText());
-            Date checkOutDate = DateUtil.parseDate(checkOutDateField.getText());
+            Date checkInDate = DateUtil.parseCheckInDate(checkInDateField.getText());
+            Date checkOutDate = DateUtil.parseCheckOutDate(checkOutDateField.getText());
             
             // Validate dates
             if (!ValidationUtil.isValidBookingDates(checkInDate, checkOutDate)) {
                 JOptionPane.showMessageDialog(this, 
-                        "Invalid dates. Check-in date must be in the future and check-out date must be after check-in date.", 
+                        "Invalid dates. Check-in date must be today or in the future and check-out date must be after check-in date.", 
                         "Booking Error", 
                         JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Double check availability
+            if (!isRoomAvailableForDates(roomNumber, checkInDate, checkOutDate)) {
+                JOptionPane.showMessageDialog(this, 
+                        "Sorry, this room is no longer available for the selected dates.", 
+                        "Booking Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                updateRoomNumbers();
                 return;
             }
             
@@ -260,9 +337,6 @@ public class BookingForm extends JFrame implements ActionListener {
                     room, 
                     checkInDate, 
                     checkOutDate);
-            
-            // Set payment-related properties
-            room.setStatus(false); // Mark room as unavailable
             
             // Save booking
             boolean success = bookingDAO.createBooking(booking);

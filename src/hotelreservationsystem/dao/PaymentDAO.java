@@ -19,9 +19,15 @@ public class PaymentDAO {
         // Add payment to system
         HotelReservationSystem.addPayment(payment);
         
-        // Update booking payment status
+        // Update booking payment status based on payment status
         Booking booking = payment.getBooking();
-        booking.setPaid(true);
+        
+        // Set the booking's paid status based on the payment status
+        // Only mark as paid if status is "Paid", otherwise it's pending
+        booking.setPaid("Paid".equals(payment.getStatus()));
+        
+        // Set payment reference in booking
+        booking.setPayment(payment);
         
         // Save booking changes
         Booking[] bookings = HotelReservationSystem.getBookings();
@@ -29,7 +35,8 @@ public class PaymentDAO {
         
         for (int i = 0; i < bookingCount; i++) {
             if (bookings[i].getBookingId() == booking.getBookingId()) {
-                bookings[i].setPaid(true);
+                bookings[i].setPaid("Paid".equals(payment.getStatus()));
+                bookings[i].setPayment(payment);
                 new FileManager().saveBookings(bookings);
                 break;
             }

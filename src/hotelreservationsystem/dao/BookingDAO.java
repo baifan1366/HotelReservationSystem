@@ -17,12 +17,7 @@ public class BookingDAO {
     
     // Create a new booking
     public boolean createBooking(Booking booking) {
-        // Update room availability
-        Room room = booking.getRoom();
-        room.setStatus(false);
-        new RoomDAO().updateRoom(room);
-        
-        // Add booking
+        // Add booking to the system
         HotelReservationSystem.addBooking(booking);
         return true;
     }
@@ -77,11 +72,6 @@ public class BookingDAO {
                 // Mark booking as cancelled
                 bookings[i].setCancelled(true);
                 
-                // Make room available again
-                Room room = bookings[i].getRoom();
-                room.setAvailable(true);
-                new RoomDAO().updateRoom(room);
-                
                 // Save changes
                 new FileManager().saveBookings(bookings);
                 return true;
@@ -113,5 +103,36 @@ public class BookingDAO {
         }
         
         return activeBookings;
+    }
+    
+    /**
+     * Get bookings by room number
+     * @param roomNumber Room number to search for
+     * @return Array of bookings for the specified room
+     */
+    public Booking[] getBookingsByRoomNumber(int roomNumber) {
+        Booking[] allBookings = HotelReservationSystem.getBookings();
+        int bookingCount = HotelReservationSystem.getBookingCount();
+        
+        // Count bookings for this room
+        int roomBookingCount = 0;
+        for (int i = 0; i < bookingCount; i++) {
+            if (allBookings[i].getRoom().getRoomNumber() == roomNumber && 
+                !allBookings[i].isCancelled()) {
+                roomBookingCount++;
+            }
+        }
+        
+        // Create array of room's bookings
+        Booking[] roomBookings = new Booking[roomBookingCount];
+        int index = 0;
+        for (int i = 0; i < bookingCount; i++) {
+            if (allBookings[i].getRoom().getRoomNumber() == roomNumber && 
+                !allBookings[i].isCancelled()) {
+                roomBookings[index++] = allBookings[i];
+            }
+        }
+        
+        return roomBookings;
     }
 }
