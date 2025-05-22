@@ -122,7 +122,7 @@ public class HotelReservationSystem {
         }
         
         if (!adminExists) {
-            Admin admin = new Admin("admin", "Admin", "admin123", "admin@hotel.com", "ADM001", "System Administrator");
+            Admin admin = new Admin("admin", "Admin", "admin13", "admin@hotel.com", "ADM001", "System Administrator");
             users[userCount++] = admin;
             fileManager.saveUsers(users);
         }
@@ -192,5 +192,10 @@ public class HotelReservationSystem {
     // Payment count getter
     public static int getPaymentCount() {
         return paymentCount;
+    }
+    
+    // User count setter
+    public static void setUserCount(int count) {
+        userCount = count;
     }
 }

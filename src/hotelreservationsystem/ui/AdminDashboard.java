@@ -5,31 +5,39 @@
 package hotelreservationsystem.ui;
 
 import hotelreservationsystem.HotelReservationSystem;
+import hotelreservationsystem.dao.AdminDAO;
 import hotelreservationsystem.dao.BookingDAO;
+import hotelreservationsystem.dao.FileManager;
 import hotelreservationsystem.dao.RoomDAO;
 import hotelreservationsystem.model.Admin;
 import hotelreservationsystem.model.Booking;
 import hotelreservationsystem.model.Room;
+import hotelreservationsystem.model.User;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 public class AdminDashboard extends JFrame implements ActionListener {
     private Admin admin;
     private JTabbedPane tabbedPane;
     private JButton addRoomButton;
+    private JButton addAdminButton;
     private JButton generateReportButton;
     private JButton logoutButton;
     private JTable roomsTable;
@@ -65,12 +73,17 @@ public class AdminDashboard extends JFrame implements ActionListener {
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
         // Create button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 0));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 10, 0));
         
         // Add room button
         addRoomButton = new JButton("Add New Room");
         addRoomButton.addActionListener(this);
         StyleConfig.applyStyle(addRoomButton);
+        
+        // Add admin button
+        addAdminButton = new JButton("Add New Admin");
+        addAdminButton.addActionListener(this);
+        StyleConfig.applyStyle(addAdminButton);
         
         // Generate report button
         generateReportButton = new JButton("Generate Report");
@@ -83,6 +96,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
         StyleConfig.applyAccentStyle(logoutButton);
         
         buttonPanel.add(addRoomButton);
+        buttonPanel.add(addAdminButton);
         buttonPanel.add(generateReportButton);
         buttonPanel.add(logoutButton);
         
@@ -207,6 +221,8 @@ public class AdminDashboard extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addRoomButton) {
             addNewRoom();
+        } else if (e.getSource() == addAdminButton) {
+            addNewAdmin();
         } else if (e.getSource() == generateReportButton) {
             generateReport();
         } else if (e.getSource() == logoutButton) {
@@ -243,6 +259,132 @@ public class AdminDashboard extends JFrame implements ActionListener {
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Invalid number format!", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    private void addNewAdmin() {
+        // Create a dialog to add a new admin
+        JDialog dialog = new JDialog(this, "Add New Admin", true);
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Create input panel
+        JPanel inputPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        
+        // User ID field
+        JLabel userIdLabel = new JLabel("User ID:");
+        JTextField userIdField = new JTextField();
+        
+        // Name field
+        JLabel nameLabel = new JLabel("Name:");
+        JTextField nameField = new JTextField();
+        
+        // Password field
+        JLabel passwordLabel = new JLabel("Password:");
+        JPasswordField passwordField = new JPasswordField();
+        
+        // Email field
+        JLabel emailLabel = new JLabel("Email:");
+        JTextField emailField = new JTextField();
+        
+        // Admin ID field
+        JLabel adminIdLabel = new JLabel("Admin ID:");
+        JTextField adminIdField = new JTextField();
+        
+        // Role field
+        JLabel roleLabel = new JLabel("Role:");
+        JTextField roleField = new JTextField();
+        
+        // Add components to input panel
+        inputPanel.add(userIdLabel);
+        inputPanel.add(userIdField);
+        inputPanel.add(nameLabel);
+        inputPanel.add(nameField);
+        inputPanel.add(passwordLabel);
+        inputPanel.add(passwordField);
+        inputPanel.add(emailLabel);
+        inputPanel.add(emailField);
+        inputPanel.add(adminIdLabel);
+        inputPanel.add(adminIdField);
+        inputPanel.add(roleLabel);
+        inputPanel.add(roleField);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton saveButton = new JButton("Save");
+        JButton cancelButton = new JButton("Cancel");
+        
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        
+        // Add action listeners
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        saveButton.addActionListener(e -> {
+            try {
+                // Validate input
+                String userId = userIdField.getText().trim();
+                String name = nameField.getText().trim();
+                String password = new String(passwordField.getPassword()).trim();
+                String email = emailField.getText().trim();
+                String adminId = adminIdField.getText().trim();
+                String role = roleField.getText().trim();
+                
+                if (userId.isEmpty() || name.isEmpty() || password.isEmpty() || 
+                    email.isEmpty() || adminId.isEmpty() || role.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "All fields are required!", 
+                            "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Check if admin ID already exists
+                AdminDAO adminDAO = new AdminDAO();
+                if (adminDAO.findAdminByUserId(userId) != null) {
+                    JOptionPane.showMessageDialog(dialog, "User ID already exists!", 
+                            "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Create new admin
+                Admin newAdmin = new Admin(userId, name, password, email, adminId, role);
+                
+                // Add admin to the system
+                User[] users = HotelReservationSystem.getUsers();
+                int userCount = HotelReservationSystem.getUserCount();
+                
+                if (userCount < users.length) {
+                    users[userCount] = newAdmin;
+                    HotelReservationSystem.setUserCount(userCount + 1);
+                    
+                    // Save users to file
+                    new FileManager().saveUsers(users);
+                    
+                    JOptionPane.showMessageDialog(dialog, "Admin added successfully!");
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "User database is full!", 
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error adding admin: " + ex.getMessage(), 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        // Add panels to dialog
+        dialog.add(inputPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Apply styling
+        StyleConfig.applyStyle(inputPanel);
+        StyleConfig.applyStyle(buttonPanel);
+        StyleConfig.applyStyle(saveButton);
+        StyleConfig.applyAccentStyle(cancelButton);
+        
+        // Show dialog
+        dialog.setVisible(true);
     }
     
     // Helper method to generate a unique room ID

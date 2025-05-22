@@ -29,6 +29,8 @@ public class CustomerDashboard extends JFrame implements ActionListener {
     private JButton viewBookingsButton;
     private JButton cancelBookingButton;
     private JButton logoutButton;
+    private JButton viewRoomsButton;
+    private JButton commentButton;
     private JTable bookingsTable;
     private DefaultTableModel bookingsTableModel;
     
@@ -58,7 +60,7 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
         // Create navigation panel
-        JPanel navPanel = new JPanel(new GridLayout(1, 4, 10, 0));
+        JPanel navPanel = new JPanel(new GridLayout(1, 6, 10, 0));
         
         // Book room button
         bookRoomButton = new JButton("Book a Room");
@@ -75,6 +77,16 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         cancelBookingButton.addActionListener(this);
         StyleConfig.applyStyle(cancelBookingButton);
         
+        // View all rooms button
+        viewRoomsButton = new JButton("All Rooms");
+        viewRoomsButton.addActionListener(this);
+        StyleConfig.applyStyle(viewRoomsButton);
+        
+        // Comment and rate button
+        commentButton = new JButton("Add Comments");
+        commentButton.addActionListener(this);
+        StyleConfig.applyStyle(commentButton);
+        
         // Logout button
         logoutButton = new JButton("Logout");
         logoutButton.addActionListener(this);
@@ -83,6 +95,8 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         navPanel.add(bookRoomButton);
         navPanel.add(viewBookingsButton);
         navPanel.add(cancelBookingButton);
+        navPanel.add(viewRoomsButton);
+        navPanel.add(commentButton);
         navPanel.add(logoutButton);
         
         // Create card panel for different views
@@ -150,13 +164,19 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         // Add bookings to table
         for (Booking booking : bookings) {
             if (booking != null) {
+                // Get payment status from payment object if available
+                String status = "Not Paid";
+                if (booking.getPayment() != null) {
+                    status = booking.getPayment().getStatus();
+                }
+                
                 Object[] rowData = {
                     booking.getBookingId(),
                     booking.getRoom().getRoomNumber(),
                     booking.getRoom().getType(),
                     booking.getCheckInDate(),
                     booking.getCheckOutDate(),
-                    booking.isPaid() ? "Paid" : "Pending Payment"
+                    status
                 };
                 bookingsTableModel.addRow(rowData);
             }
@@ -172,6 +192,10 @@ public class CustomerDashboard extends JFrame implements ActionListener {
             cardLayout.show(cardPanel, "bookings");
         } else if (e.getSource() == cancelBookingButton) {
             openCancelBookingForm();
+        } else if (e.getSource() == viewRoomsButton) {
+            openRoomDetailsDialog();
+        } else if (e.getSource() == commentButton) {
+            openRoomDetailsDialog(); // Open room details dialog on comments tab
         } else if (e.getSource() == logoutButton) {
             logout();
         }
@@ -197,5 +221,16 @@ public class CustomerDashboard extends JFrame implements ActionListener {
     public void refreshDashboard() {
         loadBookingsData();
         cardLayout.show(cardPanel, "bookings");
+    }
+    
+    // Open dialog to show all rooms and their booking details
+    private void openRoomDetailsDialog() {
+        RoomDetailsDialog dialog = new RoomDetailsDialog(this);
+        dialog.setVisible(true);
+    }
+    
+    // Getter for customer object (needed for the comment form)
+    public Customer getCustomer() {
+        return customer;
     }
 }

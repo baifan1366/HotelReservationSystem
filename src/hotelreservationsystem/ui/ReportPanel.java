@@ -100,18 +100,33 @@ public class ReportPanel extends JFrame implements ActionListener {
         reportTextArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(reportTextArea);
         
+        // Create output panel to contain the scroll pane
+        JPanel outputPanel = new JPanel(new BorderLayout());
+        outputPanel.add(scrollPane, BorderLayout.CENTER);
+        
         // Add panels to main panel
         mainPanel.add(titlePanel, BorderLayout.NORTH);
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        mainPanel.add(scrollPane, BorderLayout.SOUTH);
+        
+        // Change this part to add the outputPanel separately
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(formPanel, BorderLayout.NORTH);
+        contentPanel.add(outputPanel, BorderLayout.CENTER);
+        contentPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
         
         // Apply styling
         StyleConfig.applyStyle(mainPanel);
         StyleConfig.applyStyle(buttonPanel);
+        StyleConfig.applyStyle(outputPanel);
         
         // Add main panel to frame
         add(mainPanel);
+        
+        // Initialize with report type selection
+        handleReportTypeChange();
     }
     
     @Override
@@ -124,11 +139,9 @@ public class ReportPanel extends JFrame implements ActionListener {
     }
     
     private void handleReportTypeChange() {
-        String selectedType = (String) reportTypeComboBox.getSelectedItem();
-        boolean dateFieldsEnabled = "Revenue Report".equals(selectedType);
-        
-        startDateField.setEnabled(dateFieldsEnabled);
-        endDateField.setEnabled(dateFieldsEnabled);
+        // Enable date fields for all report types
+        startDateField.setEnabled(true);
+        endDateField.setEnabled(true);
     }
     
     private void generateReport() {
@@ -136,28 +149,29 @@ public class ReportPanel extends JFrame implements ActionListener {
         Report report = null;
         
         try {
+            // Parse dates for all report types
+            Date startDate = DateUtil.parseDate(startDateField.getText());
+            Date endDate = DateUtil.parseDate(endDateField.getText());
+            
+            if (!DateUtil.isValidDateRange(startDate, endDate)) {
+                JOptionPane.showMessageDialog(this, 
+                        "End date must be after start date", 
+                        "Invalid Date Range", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
             switch (selectedType) {
                 case "Booking Summary Report":
-                    report = ReportGenerator.generateBookingSummaryReport();
+                    report = ReportGenerator.generateBookingSummaryReport(startDate, endDate);
                     break;
                 case "Room Occupancy Report":
-                    report = ReportGenerator.generateRoomOccupancyReport();
+                    report = ReportGenerator.generateRoomOccupancyReport(startDate, endDate);
                     break;
                 case "Payment Method Report":
-                    report = ReportGenerator.generatePaymentMethodReport();
+                    report = ReportGenerator.generatePaymentMethodReport(startDate, endDate);
                     break;
                 case "Revenue Report":
-                    Date startDate = DateUtil.parseDate(startDateField.getText());
-                    Date endDate = DateUtil.parseDate(endDateField.getText());
-                    
-                    if (!DateUtil.isValidDateRange(startDate, endDate)) {
-                        JOptionPane.showMessageDialog(this, 
-                                "End date must be after start date", 
-                                "Invalid Date Range", 
-                                JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
                     report = ReportGenerator.generateRevenueReport(startDate, endDate);
                     break;
                 default:
@@ -168,13 +182,26 @@ public class ReportPanel extends JFrame implements ActionListener {
                     return;
             }
             
-            displayReport(report);
+            if (report != null) {
+                displayReport(report);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to generate report. Report came back as null.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
             
         } catch (ParseException e) {
             JOptionPane.showMessageDialog(this, 
                     "Invalid date format. Please use yyyy-MM-dd", 
                     "Error", 
                     JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                    "Error generating report: " + e.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
     
@@ -188,8 +215,13 @@ public class ReportPanel extends JFrame implements ActionListener {
         sb.append("=== ").append(report.getTitle()).append(" ===\n");
         sb.append("Generated: ").append(report.getGenerationDate()).append("\n\n");
         
-        for (Report.ReportItem item : report.getItems()) {
-            sb.append(item.getLabel()).append(": ").append(item.getValue()).append("\n");
+        if (report.getItems().isEmpty()) {
+            sb.append("No data available for this report type.\n");
+            sb.append("Make sure you have added bookings, rooms, or payments to the system.");
+        } else {
+            for (Report.ReportItem item : report.getItems()) {
+                sb.append(item.getLabel()).append(": ").append(item.getValue()).append("\n");
+            }
         }
         
         reportTextArea.setText(sb.toString());

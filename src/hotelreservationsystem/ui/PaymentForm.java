@@ -157,11 +157,15 @@ public class PaymentForm extends JFrame implements ActionListener {
         buttonPanel.add(payButton);
         buttonPanel.add(cancelButton);
         
+        // Create a south panel to hold both method and button panels
+        JPanel southPanel = new JPanel(new BorderLayout(10, 10));
+        southPanel.add(methodPanel, BorderLayout.CENTER);
+        southPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
         // Add panels to main panel
         mainPanel.add(titlePanel, BorderLayout.NORTH);
         mainPanel.add(infoPanel, BorderLayout.CENTER);
-        mainPanel.add(methodPanel, BorderLayout.SOUTH);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        mainPanel.add(southPanel, BorderLayout.SOUTH);
         
         // Apply styling
         StyleConfig.applyStyle(mainPanel);
@@ -252,6 +256,7 @@ public class PaymentForm extends JFrame implements ActionListener {
                         booking.getTotalAmount(),
                         new Date()
                 );
+                payment.setStatus("Pending Payment"); // Set cash payment status
             } else if (cardRadioButton.isSelected()) {
                 // Validate card details
                 String cardNumber = cardNumberField.getText();
@@ -295,14 +300,19 @@ public class PaymentForm extends JFrame implements ActionListener {
                         expiryYear,
                         cvv
                 );
+                payment.setStatus("Paid"); // Set card payment status
             }
             
             if (payment != null) {
                 boolean success = paymentDAO.createPayment(payment);
                 
                 if (success) {
+                    String successMessage = cashRadioButton.isSelected() ? 
+                            "Cash payment registered. Status: Pending Payment" : 
+                            "Card payment processed successfully. Status: Paid";
+                    
                     JOptionPane.showMessageDialog(this,
-                            "Payment processed successfully!",
+                            successMessage,
                             "Payment Success",
                             JOptionPane.INFORMATION_MESSAGE);
                     

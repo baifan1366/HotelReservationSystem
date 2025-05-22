@@ -18,12 +18,14 @@ public abstract class Payment implements Serializable {
     private double amount;
     private Date paymentDate;
     private Booking booking;
+    private String status; // New field for payment status
     
     // Constructor
     public Payment(int paymentId, double amount) {
         this.paymentId = paymentId;
         this.amount = amount;
         this.paymentDate = new Date();  // Current date
+        this.status = "Pending";
     }
     
     // Constructor with booking
@@ -32,6 +34,7 @@ public abstract class Payment implements Serializable {
         this.booking = booking;
         this.amount = amount;
         this.paymentDate = paymentDate;
+        this.status = "Pending";
     }
     
     // Method to generate a payment ID
@@ -80,9 +83,17 @@ public abstract class Payment implements Serializable {
         this.booking = booking;
     }
     
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
     @Override
     public String toString() {
         return "Payment [paymentId=" + paymentId + ", amount=" + amount + 
-               ", paymentDate=" + paymentDate + "]";
+               ", paymentDate=" + paymentDate + ", status=" + status + "]";
     }
 }
