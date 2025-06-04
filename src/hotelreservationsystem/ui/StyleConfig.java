@@ -81,8 +81,8 @@ public class StyleConfig {
      */
     public static void applyStyle(JButton button) {
         button.setFont(NORMAL_FONT);
-        button.setBackground(PRIMARY_COLOR);
-        button.setForeground(Color.WHITE);
+        button.setBackground(Color.WHITE);
+        button.setForeground(PRIMARY_COLOR);
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(2, 2, 2, 2),
@@ -128,6 +128,6 @@ public class StyleConfig {
      */
     public static void applyAccentStyle(JButton button) {
         applyStyle(button);
-        button.setBackground(ACCENT_COLOR);
+        button.setForeground(ACCENT_COLOR);
     }
 }
