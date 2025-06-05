@@ -79,7 +79,7 @@ public class ValidationUtil {
             return false;
         }
         
-        // Check-out date should be after check-in date
+        // Check-out date should be at least one day after check-in date
         return DateUtil.isValidDateRange(checkInDate, checkOutDate);
     }
     

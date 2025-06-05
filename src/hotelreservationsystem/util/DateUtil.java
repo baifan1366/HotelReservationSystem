@@ -96,8 +96,29 @@ public class DateUtil {
      * @return Number of days between the dates
      */
     public static int getDaysBetween(Date startDate, Date endDate) {
-        long diffInMillies = Math.abs(endDate.getTime() - startDate.getTime());
-        return (int) TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+
+        Calendar startCal = Calendar.getInstance();
+        startCal.setTime(startDate);
+
+        startCal.set(Calendar.HOUR_OF_DAY, 0);
+        startCal.set(Calendar.MINUTE, 0);
+        startCal.set(Calendar.SECOND, 0);
+        startCal.set(Calendar.MILLISECOND, 0);
+        
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(endDate);
+
+        endCal.set(Calendar.HOUR_OF_DAY, 0);
+        endCal.set(Calendar.MINUTE, 0);
+        endCal.set(Calendar.SECOND, 0);
+        endCal.set(Calendar.MILLISECOND, 0);
+        
+        long diffInMillis = endCal.getTimeInMillis() - startCal.getTimeInMillis();
+        int days = (int) (diffInMillis / (1000 * 60 * 60 * 24));
+        
+        int stayDays = days;
+              
+        return stayDays;
     }
     
     /**
@@ -137,7 +158,8 @@ public class DateUtil {
      * @return true if end date is after or the same as start date, false otherwise
      */
     public static boolean isValidDateRange(Date startDate, Date endDate) {
-        return endDate.after(startDate) || isSameDay(startDate, endDate);
+        // 不再允许同一天入住和退房，必须至少相差一天
+        return endDate.after(startDate) && !isSameDay(startDate, endDate);
     }
     
     /**
