@@ -135,7 +135,7 @@ public class Booking implements Serializable {
     
     @Override
     public String toString() {
-        return "Booking [bookingId=" + bookingId + ", customer=" + customer.getName() + 
+        return "Booking [bookingId=" + bookingId + ", customer=" + customer.getFullName() + 
                ", room=" + room.getRoomNumber() + ", checkInDate=" + checkInDate + 
                ", checkOutDate=" + checkOutDate + ", status=" + (status ? "Active" : "Cancelled") + "]";
     }

@@ -29,8 +29,16 @@ public class ValidationUtil {
      * @return true if valid, false otherwise
      */
     public static boolean isValidPassword(String password) {
-        // Password should be at least 6 characters
-        return password != null && password.length() >= 6;
+        // Password should be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character.
+        if (password == null || password.length() < 8) return false;
+        boolean hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) hasUpper = true;
+            else if (Character.isLowerCase(c)) hasLower = true;
+            else if (Character.isDigit(c)) hasDigit = true;
+            else if ("!@#$%^&*()-_=+[]{}|;:'\",.<>/?`~".indexOf(c) >= 0) hasSpecial = true;
+        }
+        return hasUpper && hasLower && hasDigit && hasSpecial;
     }
     
     /**
@@ -150,5 +158,26 @@ public class ValidationUtil {
         }
         
         return true;
+    }
+    
+    /**
+     * Validate CVV number
+     * @param cvv CVV number to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidCVV(String cvv) {
+        // CVV should be 3 or 4 digits only, no letters or spaces allowed
+        return cvv != null && cvv.trim().matches("^[0-9]{3}$");
+    }
+    
+    /**
+     * Validate email format
+     * @param email Email to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidEmail(String email) {
+        // Basic email regex for format validation
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        return email != null && email.matches(emailRegex);
     }
 }

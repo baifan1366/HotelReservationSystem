@@ -28,6 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 
 public class BookingForm extends JFrame implements ActionListener {
     private Customer customer;
@@ -44,8 +46,31 @@ public class BookingForm extends JFrame implements ActionListener {
     private RoomDAO roomDAO;
     private BookingDAO bookingDAO;
     
-    private static int bookingIdCounter = 1000;
+    private JPanel roomInfoPanel;
+
+    private JLabel bed, airVent, baggageClaim, bath;
+    private JLabel bedDouble, alarmClock, brushCleaning, cigaretteOff, utensils;
+    private JLabel airplay, carTaxiFront, conciergeBell, plane;
     
+    private static int bookingIdCounter = 1000;
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/circle-check.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/air-vent.png")),
+        new ImageIcon(getClass().getResource("/image/baggage-claim.png")),
+        new ImageIcon(getClass().getResource("/image/bed-double.png")),
+        new ImageIcon(getClass().getResource("/image/car-taxi-front.png")),
+        new ImageIcon(getClass().getResource("/image/airplay.png")),
+        new ImageIcon(getClass().getResource("/image/alarm-clock.png")),
+        new ImageIcon(getClass().getResource("/image/bath.png")),
+        new ImageIcon(getClass().getResource("/image/brush-cleaning.png")),
+        new ImageIcon(getClass().getResource("/image/cigarette-off.png")),
+        new ImageIcon(getClass().getResource("/image/concierge-bell.png")),
+        new ImageIcon(getClass().getResource("/image/plane.png")),
+        new ImageIcon(getClass().getResource("/image/utensils.png")),
+        new ImageIcon(getClass().getResource("/image/bed.png")),
+        new ImageIcon(getClass().getResource("/image/file-plus-2.png"))
+    };
     public BookingForm(Customer customer, CustomerDashboard dashboard) {
         this.customer = customer;
         this.dashboard = dashboard;
@@ -57,7 +82,7 @@ public class BookingForm extends JFrame implements ActionListener {
     private void initComponents() {
         // Set frame properties
         setTitle("Book a Room");
-        setSize(500, 350);
+        setSize(500, 500);
         setLocationRelativeTo(null);
         setResizable(false);
         
@@ -68,10 +93,15 @@ public class BookingForm extends JFrame implements ActionListener {
         // Create title panel
         JPanel titlePanel = new JPanel();
         JLabel titleLabel = new JLabel("Book a Room");
+        titleLabel.setIcon(icons[15]);
+        titleLabel.setHorizontalTextPosition(SwingConstants.CENTER); 
+        titleLabel.setVerticalTextPosition(SwingConstants.BOTTOM);  
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); 
         StyleConfig.applyTitleStyle(titleLabel);
         titlePanel.add(titleLabel);
         StyleConfig.applyStyle(titlePanel);
         
+        JPanel centerPanel = new JPanel(new GridLayout(2, 1));
         // Create form panel
         JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
         
@@ -185,16 +215,129 @@ public class BookingForm extends JFrame implements ActionListener {
         formPanel.add(totalLabel);
         formPanel.add(totalAmountLabel);
         
+        // Room info panel
+        roomInfoPanel = new JPanel(new GridLayout(3, 4)); 
+        
+        airVent = new JLabel("Air Conditional");
+        airVent.setIcon(icons[2]);
+        airVent.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        airVent.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        airVent.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        airVent.setIconTextGap(10);
+        
+        baggageClaim = new JLabel("Luggage Storage");
+        baggageClaim.setIcon(icons[3]);
+        baggageClaim.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        baggageClaim.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        baggageClaim.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        baggageClaim.setIconTextGap(10);
+        
+        bedDouble = new JLabel("Double Bed");
+        bedDouble.setIcon(icons[4]);
+        bedDouble.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        bedDouble.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        bedDouble.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        bedDouble.setIconTextGap(10);
+        
+        carTaxiFront = new JLabel("Car Taxi");
+        carTaxiFront.setIcon(icons[5]);
+        carTaxiFront.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        carTaxiFront.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        carTaxiFront.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        carTaxiFront.setIconTextGap(10);
+        
+        airplay = new JLabel("Television");
+        airplay.setIcon(icons[6]);
+        airplay.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        airplay.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        airplay.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        airplay.setIconTextGap(10);
+        
+        alarmClock = new JLabel("Wake-up Call");
+        alarmClock.setIcon(icons[7]);
+        alarmClock.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        alarmClock.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        alarmClock.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        alarmClock.setIconTextGap(10);
+        
+        bath = new JLabel("Bathroom");
+        bath.setIcon(icons[8]);
+        bath.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        bath.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        bath.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        bath.setIconTextGap(10);
+        
+        brushCleaning = new JLabel("Housekeeping");
+        brushCleaning.setIcon(icons[9]);
+        brushCleaning.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        brushCleaning.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        brushCleaning.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        brushCleaning.setIconTextGap(10);
+        
+        cigaretteOff = new JLabel("Non-smoking");
+        cigaretteOff.setIcon(icons[10]);
+        cigaretteOff.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cigaretteOff.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cigaretteOff.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        cigaretteOff.setIconTextGap(10);
+        
+        conciergeBell = new JLabel("Room Service");
+        conciergeBell.setIcon(icons[11]);
+        conciergeBell.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        conciergeBell.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        conciergeBell.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        conciergeBell.setIconTextGap(10);
+        
+        plane = new JLabel("Near the Airport");
+        plane.setIcon(icons[12]);
+        plane.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        plane.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        plane.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        plane.setIconTextGap(10);
+        
+        utensils = new JLabel("Meals");
+        utensils.setIcon(icons[13]);
+        utensils.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        utensils.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        utensils.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        utensils.setIconTextGap(10);
+        
+        bed = new JLabel("Single Bed");
+        bed.setIcon(icons[14]);
+        bed.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        bed.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        bed.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        bed.setIconTextGap(10);
+        
+        // Trigger initial display for "Single"
+        updateRoomInfo("Single");
+        
+        // get roomTypeLabel, then display different labelIcon
+        roomTypeComboBox.addActionListener(e -> {
+            String selected = (String) roomTypeComboBox.getSelectedItem();
+            updateRoomInfo(selected);
+        });
+
         // Button panel
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         
         // Book button
         bookButton = new JButton("Book Now");
+        bookButton.setIcon(icons[0]);
+        bookButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        bookButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        bookButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        bookButton.setIconTextGap(10);
         bookButton.addActionListener(this);
         StyleConfig.applyStyle(bookButton);
         
         // Cancel button
         cancelButton = new JButton("Cancel");
+        cancelButton.setIcon(icons[1]);
+        cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cancelButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cancelButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        cancelButton.setIconTextGap(10);
         cancelButton.addActionListener(this);
         StyleConfig.applyAccentStyle(cancelButton);
         
@@ -202,8 +345,10 @@ public class BookingForm extends JFrame implements ActionListener {
         buttonPanel.add(cancelButton);
         
         // Add panels to main panel
+        centerPanel.add(formPanel);
+        centerPanel.add(roomInfoPanel);
         mainPanel.add(titlePanel, BorderLayout.NORTH);
-        mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         // Apply styling
@@ -213,6 +358,44 @@ public class BookingForm extends JFrame implements ActionListener {
         add(mainPanel);
     }
     
+    private void updateRoomInfo(String selected) {
+        roomInfoPanel.removeAll();
+        switch (selected) {
+            case "Single":
+                roomInfoPanel.add(bed);
+                roomInfoPanel.add(airVent);
+                roomInfoPanel.add(baggageClaim);
+                roomInfoPanel.add(bath);
+                break;
+            case "Double":
+                roomInfoPanel.add(bedDouble);
+                roomInfoPanel.add(airVent);
+                roomInfoPanel.add(alarmClock);
+                roomInfoPanel.add(baggageClaim);
+                roomInfoPanel.add(bath);
+                roomInfoPanel.add(brushCleaning);
+                roomInfoPanel.add(cigaretteOff);
+                roomInfoPanel.add(utensils);
+                break;
+            case "Suite":
+                roomInfoPanel.add(bed);
+                roomInfoPanel.add(bedDouble);
+                roomInfoPanel.add(airVent);
+                roomInfoPanel.add(airplay);
+                roomInfoPanel.add(alarmClock);
+                roomInfoPanel.add(baggageClaim);
+                roomInfoPanel.add(bath);
+                roomInfoPanel.add(brushCleaning);
+                roomInfoPanel.add(carTaxiFront);
+                roomInfoPanel.add(cigaretteOff);
+                roomInfoPanel.add(conciergeBell);
+                roomInfoPanel.add(plane);
+                break;
+        }
+        roomInfoPanel.revalidate();
+        roomInfoPanel.repaint();
+    }
+
     // Method to validate a date field when focus is lost
     private void validateDateField(JTextField field) {
         if (!field.getText().trim().isEmpty()) {

@@ -44,6 +44,20 @@ public class AdminDAO {
         return null;
     }
     
+    // Find admin by email
+    public Admin findAdminByEmail(String email) {
+        User[] users = HotelReservationSystem.getUsers();
+        int userCount = HotelReservationSystem.getUserCount();
+        
+        for (int i = 0; i < userCount; i++) {
+            User user = users[i];
+            if (user instanceof Admin && user.getEmail() != null && user.getEmail().equals(email)) {
+                return (Admin) user;
+            }
+        }
+        return null;
+    }
+    
     // Update admin information
     public boolean updateAdmin(Admin admin) {
         User[] users = HotelReservationSystem.getUsers();
@@ -58,5 +72,20 @@ public class AdminDAO {
             }
         }
         return false;
+    }
+    
+    // Find admin by name (username) and password
+    public Admin findAdminByNameAndPassword(String username, String password) {
+        User[] users = HotelReservationSystem.getUsers();
+        int userCount = HotelReservationSystem.getUserCount();
+        for (int i = 0; i < userCount; i++) {
+            User user = users[i];
+            if (user instanceof Admin &&
+                user.getUsername() != null && user.getUsername().equals(username) &&
+                user.getPassword() != null && user.getPassword().equals(password)) {
+                return (Admin) user;
+            }
+        }
+        return null;
     }
 } 

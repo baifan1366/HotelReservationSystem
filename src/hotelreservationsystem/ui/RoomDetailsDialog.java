@@ -26,6 +26,8 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JFrame;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 
 public class RoomDetailsDialog extends JDialog implements ActionListener {
     private JTable roomsTable;
@@ -43,6 +45,11 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
     private JLabel ratingLabel;
     private SimpleDateFormat dateFormat;
 
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/message-circle.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png"))
+    };
+    
     public RoomDetailsDialog(JFrame parent) {
         super(parent, "All Rooms and Booking Details", true);
         this.roomDAO = new RoomDAO();
@@ -104,7 +111,13 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         
         // Add comment button
         addCommentButton = new JButton("Add Comment");
+        addCommentButton.setIcon(icons[0]);
+        addCommentButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        addCommentButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        addCommentButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        addCommentButton.setIconTextGap(10);
         addCommentButton.addActionListener(this);
+        StyleConfig.applyStyle(addCommentButton);
         addCommentButton.setEnabled(false); // Disabled until a room is selected
         
         // Comments panel with button
@@ -155,8 +168,14 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         mainPanel.add(splitPanel, BorderLayout.CENTER);
 
         // Close button
-        closeButton = new JButton("Close");
+        closeButton = new JButton("Cancel");
         closeButton.addActionListener(this);
+        closeButton.setIcon(icons[1]);
+        closeButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        closeButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        closeButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        closeButton.setIconTextGap(10);
+        StyleConfig.applyAccentStyle(closeButton);
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(closeButton);
 
@@ -208,7 +227,7 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
             if (booking != null) {
                 Object[] rowData = {
                     booking.getBookingId(),
-                    booking.getCustomer().getName(),
+                    booking.getCustomer().getFullName(),
                     dateFormat.format(booking.getCheckInDate()),
                     dateFormat.format(booking.getCheckOutDate()),
                     booking.isCancelled() ? "Cancelled" : (booking.isPaid() ? "Paid" : "Pending Payment")

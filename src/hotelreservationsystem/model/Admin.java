@@ -16,8 +16,8 @@ public class Admin extends User {
     private String role;
     
     // Constructor
-    public Admin(String userId, String name, String password, String email, String adminId, String role) {
-        super(userId, name, password, email);
+    public Admin(String fullName, String username, String password, String email, String adminId, String role) {
+        super(fullName, username, password, email);
         this.adminId = adminId;
         this.role = role;
     }

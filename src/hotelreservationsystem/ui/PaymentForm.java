@@ -281,9 +281,25 @@ public class PaymentForm extends JFrame implements ActionListener {
                     return;
                 }
                 
+                if (!ValidationUtil.isValidName(cardHolder)) {
+                    JOptionPane.showMessageDialog(this,
+                            "Invalid card holder name. Only letters and spaces are allowed.",
+                            "Payment Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
                 if (!ValidationUtil.isValidExpiryDate(expiryMonth, expiryYear)) {
                     JOptionPane.showMessageDialog(this,
                             "Card is expired",
+                            "Payment Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (!ValidationUtil.isValidCVV(cvv)) {
+                    JOptionPane.showMessageDialog(this,
+                            "Invalid CVV. CVV must be 3 digits.",
                             "Payment Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;

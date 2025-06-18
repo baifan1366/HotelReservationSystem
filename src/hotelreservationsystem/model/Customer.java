@@ -14,12 +14,14 @@ public class Customer extends User {
     
     private String phone;
     private String address;
+    private String username;
     
     // Constructor
-    public Customer(String userId, String name, String password, String email, String phone, String address) {
-        super(userId, name, password, email);
+    public Customer(String fullName, String username, String password, String email, String phone, String address) {
+        super(fullName, username, password, email);
         this.phone = phone;
         this.address = address;
+        this.username = username;
     }
     
     // Method to register a new customer
@@ -49,6 +51,14 @@ public class Customer extends User {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
     
     @Override

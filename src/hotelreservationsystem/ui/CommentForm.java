@@ -21,7 +21,9 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
+import java.awt.Dimension;
 
 public class CommentForm extends JDialog implements ActionListener {
     private JTextArea commentTextArea;
@@ -33,7 +35,12 @@ public class CommentForm extends JDialog implements ActionListener {
     private Customer customer;
     private Room room;
     private Component parent;
-    
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/smile.png")),
+        new ImageIcon(getClass().getResource("/image/angry.png")),
+        new ImageIcon(getClass().getResource("/image/circle-check.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png"))
+    };
     public CommentForm(Component parent, Customer customer, Room room) {
         super(getWindowForComponent(parent), "Add Comment and Rating", true);
         this.parent = parent;
@@ -56,7 +63,7 @@ public class CommentForm extends JDialog implements ActionListener {
     }
     
     private void initComponents() {
-        setSize(500, 400);
+        setSize(700, 400);
         setLocationRelativeTo(parent);
         setResizable(false);
         setLayout(new BorderLayout(10, 10));
@@ -90,21 +97,48 @@ public class CommentForm extends JDialog implements ActionListener {
         
         ButtonGroup ratingGroup = new ButtonGroup();
         ratingButtons = new JRadioButton[5];
-        
+
         for (int i = 0; i < 5; i++) {
+            JPanel radioWithIconPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+            radioWithIconPanel.setOpaque(false);
+
+            // Add icon[0] to the left of the first radio button
+            if (i == 0) {
+                JLabel iconLabel = new JLabel(icons[1]);
+                radioWithIconPanel.add(iconLabel);
+            }
+
             ratingButtons[i] = new JRadioButton((i + 1) + " Star" + (i > 0 ? "s" : ""));
             ratingGroup.add(ratingButtons[i]);
-            ratingPanel.add(ratingButtons[i]);
+            radioWithIconPanel.add(ratingButtons[i]);
+
+            // Add icon[1] to the right of the last radio button
+            if (i == 4) {
+                JLabel iconLabel = new JLabel(icons[0]);
+                radioWithIconPanel.add(iconLabel);
+            }
+
+            ratingPanel.add(radioWithIconPanel);
         }
-        
+
         // Default to 5 stars
         ratingButtons[4].setSelected(true);
         
         // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         submitButton = new JButton("Submit");
+        submitButton.setIcon(icons[2]);
+        submitButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        submitButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        submitButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        submitButton.setIconTextGap(10);
         submitButton.addActionListener(this);
         cancelButton = new JButton("Cancel");
+        cancelButton.setIcon(icons[3]);
+        cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cancelButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cancelButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        cancelButton.setIconTextGap(10);
         cancelButton.addActionListener(this);
         
         buttonPanel.add(submitButton);
@@ -127,7 +161,7 @@ public class CommentForm extends JDialog implements ActionListener {
         StyleConfig.applyStyle(ratingPanel);
         StyleConfig.applyStyle(buttonPanel);
         StyleConfig.applyStyle(submitButton);
-        StyleConfig.applyStyle(cancelButton);
+        StyleConfig.applyAccentStyle(cancelButton);
     }
     
     @Override
@@ -158,7 +192,7 @@ public class CommentForm extends JDialog implements ActionListener {
             customer.getUserId(),
             rating,
             commentText,
-            customer.getName()
+            customer.getFullName()
         );
         
         if (success) {

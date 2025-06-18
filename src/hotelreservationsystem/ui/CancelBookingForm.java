@@ -21,6 +21,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 
 public class CancelBookingForm extends JFrame implements ActionListener {
     private Customer customer;
@@ -32,6 +34,12 @@ public class CancelBookingForm extends JFrame implements ActionListener {
     private JButton backButton;
     
     private BookingDAO bookingDAO;
+    
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/file-x-2.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/circle-check.png"))
+    };
     
     public CancelBookingForm(Customer customer, CustomerDashboard dashboard) {
         this.customer = customer;
@@ -54,6 +62,10 @@ public class CancelBookingForm extends JFrame implements ActionListener {
         // Create title panel
         JPanel titlePanel = new JPanel();
         JLabel titleLabel = new JLabel("Cancel Booking");
+        titleLabel.setIcon(icons[0]);
+        titleLabel.setHorizontalTextPosition(SwingConstants.CENTER); 
+        titleLabel.setVerticalTextPosition(SwingConstants.BOTTOM);  
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); 
         StyleConfig.applyTitleStyle(titleLabel);
         titlePanel.add(titleLabel);
         StyleConfig.applyStyle(titlePanel);
@@ -77,13 +89,23 @@ public class CancelBookingForm extends JFrame implements ActionListener {
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         
         // Cancel booking button
-        cancelBookingButton = new JButton("Cancel Selected Booking");
+        cancelBookingButton = new JButton("Proceed");
         cancelBookingButton.addActionListener(this);
+        cancelBookingButton.setIcon(icons[2]);
+        cancelBookingButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cancelBookingButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cancelBookingButton.setHorizontalAlignment(SwingConstants.CENTER); 
+        cancelBookingButton.setIconTextGap(10);
         StyleConfig.applyStyle(cancelBookingButton);
         
         // Back button
-        backButton = new JButton("Back to Dashboard");
+        backButton = new JButton("Cancel");
         backButton.addActionListener(this);
+        backButton.setIcon(icons[1]);
+        backButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        backButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        backButton.setHorizontalAlignment(SwingConstants.CENTER); 
+        backButton.setIconTextGap(10);
         StyleConfig.applyAccentStyle(backButton);
         
         buttonPanel.add(cancelBookingButton);

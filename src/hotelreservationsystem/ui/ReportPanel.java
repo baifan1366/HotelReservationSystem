@@ -23,14 +23,21 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 
 public class ReportPanel extends JFrame implements ActionListener {
     private JComboBox<String> reportTypeComboBox;
     private JTextField startDateField;
     private JTextField endDateField;
     private JButton generateButton;
+    private JButton backButton;
     private JTextArea reportTextArea;
-    
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/clipboard-list.png")),
+        new ImageIcon(getClass().getResource("/image/circle-check.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png"))
+    };
     public ReportPanel() {
         initComponents();
     }
@@ -48,6 +55,10 @@ public class ReportPanel extends JFrame implements ActionListener {
         // Create title panel
         JPanel titlePanel = new JPanel();
         JLabel titleLabel = new JLabel("Report Generator");
+        titleLabel.setIcon(icons[0]);
+        titleLabel.setHorizontalTextPosition(SwingConstants.CENTER);  // text at right
+        titleLabel.setVerticalTextPosition(SwingConstants.BOTTOM);  // center vertically
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
         StyleConfig.applyTitleStyle(titleLabel);
         titlePanel.add(titleLabel);
         StyleConfig.applyStyle(titlePanel);
@@ -56,7 +67,7 @@ public class ReportPanel extends JFrame implements ActionListener {
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         
         // Report type combo box
-        JLabel reportTypeLabel = new JLabel("Report Type:");
+        JLabel reportTypeLabel = new JLabel("Report Type:");        
         reportTypeComboBox = new JComboBox<>(new String[]{
             "Booking Summary Report",
             "Room Occupancy Report",
@@ -87,13 +98,29 @@ public class ReportPanel extends JFrame implements ActionListener {
         formPanel.add(endDateField);
         
         // Button panel
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         
         // Generate report button
-        generateButton = new JButton("Generate Report");
+        generateButton = new JButton("Generate");
         generateButton.addActionListener(this);
+        generateButton.setIcon(icons[1]);
+        generateButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        generateButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        generateButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        generateButton.setIconTextGap(10);
         StyleConfig.applyStyle(generateButton);
         buttonPanel.add(generateButton);
+        
+        // Back button
+        backButton = new JButton("Cancel");
+        backButton.addActionListener(this);
+        backButton.setIcon(icons[2]);
+        backButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        backButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        backButton.setHorizontalAlignment(SwingConstants.CENTER); 
+        backButton.setIconTextGap(10);
+        StyleConfig.applyAccentStyle(backButton);
+        buttonPanel.add(backButton);
         
         // Report text area
         reportTextArea = new JTextArea(15, 50);
@@ -135,6 +162,8 @@ public class ReportPanel extends JFrame implements ActionListener {
             handleReportTypeChange();
         } else if (e.getSource() == generateButton) {
             generateReport();
+        } else if (e.getSource() == backButton) {
+            dispose();
         }
     }
     

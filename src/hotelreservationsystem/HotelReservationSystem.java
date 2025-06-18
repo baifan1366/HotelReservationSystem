@@ -42,15 +42,15 @@ public class HotelReservationSystem {
     public static void main(String[] args) {
         // Initialize system with data from files
         loadData();
+        // Clear all users (for debugging/fresh start)
+        // clearAllUsers();
         
         // If no rooms exist, create some default rooms
         if (roomCount == 0) {
             initializeDefaultRooms();
         }
-        
         // If no admin exists, create a default admin
         createDefaultAdminIfNeeded();
-        
         // Launch the login form
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -122,10 +122,19 @@ public class HotelReservationSystem {
         }
         
         if (!adminExists) {
-            Admin admin = new Admin("admin", "Admin", "admin13", "admin@hotel.com", "ADM001", "System Administrator");
+            Admin admin = new Admin("Admin", "admin", "admin13", "admin@hotel.com", "ADM001", "System Administrator");
             users[userCount++] = admin;
             fileManager.saveUsers(users);
         }
+    }
+    
+    // Method to clear all user data
+    public static void clearAllUsers() {
+        for (int i = 0; i < users.length; i++) {
+            users[i] = null;
+        }
+        userCount = 0;
+        fileManager.saveUsers(users); // Save the empty user list
     }
     
     // Getters for data access

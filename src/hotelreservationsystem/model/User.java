@@ -4,6 +4,7 @@
  */
 package hotelreservationsystem.model;
 import java.io.Serializable;
+import hotelreservationsystem.util.UUIDUtil;
 /**
  *
  * @author user
@@ -13,14 +14,16 @@ public abstract class User implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private String userId;
-    private String name;
+    private String fullName;
+    private String username;
     private String password;
     private String email;
     
     // Constructor
-    public User(String userId, String name, String password, String email) {
-        this.userId = userId;
-        this.name = name;
+    public User(String fullName, String username, String password, String email) {
+        this.userId = "user-" + UUIDUtil.generateShortUUID();
+        this.fullName = fullName;
+        this.username = username;
         this.password = password;
         this.email = email;
     }
@@ -37,12 +40,20 @@ public abstract class User implements Serializable {
         this.userId = userId;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -63,6 +74,6 @@ public abstract class User implements Serializable {
     
     @Override
     public String toString() {
-        return "User [userId=" + userId + ", name=" + name + ", email=" + email + "]";
+        return "User [userId=" + userId + ", fullName=" + fullName + ", username=" + username + ", email=" + email + "]";
     }
 }

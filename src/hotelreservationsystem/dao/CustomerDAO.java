@@ -10,16 +10,16 @@ import hotelreservationsystem.model.User;
 
 public class CustomerDAO {
     
-    // Find customer by userId and password
-    public Customer findCustomer(String userId, String password) {
+    // Find customer by username and password
+    public Customer findCustomer(String username, String password) {
         User[] users = HotelReservationSystem.getUsers();
         int userCount = HotelReservationSystem.getUserCount();
         
         for (int i = 0; i < userCount; i++) {
             User user = users[i];
             if (user instanceof Customer && 
-                user.getUserId().equals(userId) && 
-                user.getPassword().equals(password)) {
+                user.getUsername() != null && user.getUsername().equals(username) && 
+                user.getPassword() != null && user.getPassword().equals(password)) {
                 return (Customer) user;
             }
         }

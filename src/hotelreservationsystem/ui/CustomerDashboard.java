@@ -19,7 +19,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.JPasswordField;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+import javax.swing.JDialog;
+import java.awt.Dimension;
+import javax.swing.JComponent;
+import java.awt.FlowLayout;
 
 public class CustomerDashboard extends JFrame implements ActionListener {
     private Customer customer;
@@ -30,12 +39,21 @@ public class CustomerDashboard extends JFrame implements ActionListener {
     private JButton cancelBookingButton;
     private JButton logoutButton;
     private JButton viewRoomsButton;
-    private JButton commentButton;
+    private JButton profileButton;
     private JTable bookingsTable;
     private DefaultTableModel bookingsTableModel;
     
     private BookingDAO bookingDAO;
-    
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/log-out.png")),
+        new ImageIcon(getClass().getResource("/image/circle-check.png")),
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/file-plus-2.png")),
+        new ImageIcon(getClass().getResource("/image/file-input.png")),
+        new ImageIcon(getClass().getResource("/image/file-x-2.png")),
+        new ImageIcon(getClass().getResource("/image/file-stack.png")),
+        new ImageIcon(getClass().getResource("/image/square-user.png")),
+    };
     public CustomerDashboard(Customer customer) {
         this.customer = customer;
         this.bookingDAO = new BookingDAO();
@@ -44,8 +62,8 @@ public class CustomerDashboard extends JFrame implements ActionListener {
     
     private void initComponents() {
         // Set frame properties
-        setTitle("Customer Dashboard - " + customer.getName());
-        setSize(800, 600);
+        setTitle("Customer Dashboard - " + customer.getUserId());
+        setSize(1000, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
@@ -55,48 +73,79 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         
         // Create header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel welcomeLabel = new JLabel("Welcome, " + customer.getName() + "!");
+                                                                //full name of user
+        JLabel welcomeLabel = new JLabel("Welcome, " + customer.getUserId() + "!");
         StyleConfig.applyTitleStyle(welcomeLabel);
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
         // Create navigation panel
-        JPanel navPanel = new JPanel(new GridLayout(1, 6, 10, 0));
+        JPanel navPanel = new JPanel(new GridLayout(1, 7, 10, 0));
         
         // Book room button
         bookRoomButton = new JButton("Book a Room");
         bookRoomButton.addActionListener(this);
+        bookRoomButton.setIcon(icons[3]);
+        bookRoomButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        bookRoomButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        bookRoomButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        bookRoomButton.setIconTextGap(10);
         StyleConfig.applyStyle(bookRoomButton);
         
         // View bookings button
         viewBookingsButton = new JButton("My Bookings");
         viewBookingsButton.addActionListener(this);
+        viewBookingsButton.setIcon(icons[4]);
+        viewBookingsButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        viewBookingsButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        viewBookingsButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        viewBookingsButton.setIconTextGap(10);
         StyleConfig.applyStyle(viewBookingsButton);
         
         // Cancel booking button
         cancelBookingButton = new JButton("Cancel Booking");
         cancelBookingButton.addActionListener(this);
+        cancelBookingButton.setIcon(icons[5]);
+        cancelBookingButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cancelBookingButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cancelBookingButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        cancelBookingButton.setIconTextGap(10);
         StyleConfig.applyStyle(cancelBookingButton);
         
         // View all rooms button
         viewRoomsButton = new JButton("All Rooms");
         viewRoomsButton.addActionListener(this);
+        viewRoomsButton.setIcon(icons[6]);
+        viewRoomsButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        viewRoomsButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        viewRoomsButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        viewRoomsButton.setIconTextGap(10);
         StyleConfig.applyStyle(viewRoomsButton);
         
-        // Comment and rate button
-        commentButton = new JButton("Add Comments");
-        commentButton.addActionListener(this);
-        StyleConfig.applyStyle(commentButton);
+        // Profile button
+        profileButton = new JButton("My Profile");
+        profileButton.addActionListener(this);
+        profileButton.setIcon(icons[7]);
+        profileButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        profileButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        profileButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        profileButton.setIconTextGap(10);
+        StyleConfig.applyStyle(profileButton);
         
         // Logout button
         logoutButton = new JButton("Logout");
         logoutButton.addActionListener(this);
+        logoutButton.setIcon(icons[0]);
+        logoutButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        logoutButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        logoutButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        logoutButton.setIconTextGap(10);
         StyleConfig.applyAccentStyle(logoutButton);
         
         navPanel.add(bookRoomButton);
         navPanel.add(viewBookingsButton);
         navPanel.add(cancelBookingButton);
         navPanel.add(viewRoomsButton);
-        navPanel.add(commentButton);
+        navPanel.add(profileButton);
         navPanel.add(logoutButton);
         
         // Create card panel for different views
@@ -105,9 +154,8 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         
         // Create welcome panel (default view)
         JPanel welcomePanel = new JPanel(new BorderLayout());
-        JLabel infoLabel = new JLabel("Use the buttons above to navigate", JLabel.CENTER);
-        StyleConfig.applyStyle(infoLabel);
-        welcomePanel.add(infoLabel, BorderLayout.CENTER);
+        JComponent bookingsContent = createBookingsPanel(); 
+        welcomePanel.add(bookingsContent, BorderLayout.CENTER);
         
         // Create bookings panel
         JPanel bookingsPanel = createBookingsPanel();
@@ -194,8 +242,8 @@ public class CustomerDashboard extends JFrame implements ActionListener {
             openCancelBookingForm();
         } else if (e.getSource() == viewRoomsButton) {
             openRoomDetailsDialog();
-        } else if (e.getSource() == commentButton) {
-            openRoomDetailsDialog(); // Open room details dialog on comments tab
+        } else if (e.getSource() == profileButton) {
+            showProfileDialog();
         } else if (e.getSource() == logoutButton) {
             logout();
         }
@@ -229,6 +277,97 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         dialog.setVisible(true);
     }
     
+    // Show customer profile dialog (editable)
+    private void showProfileDialog() {
+        // Title panel
+        JPanel titlePanel = new JPanel();
+        titlePanel.setPreferredSize(new Dimension(350, 80)); 
+        JLabel titleLabel = new JLabel("Edit Profile");
+        titleLabel.setIcon(icons[7]);
+        titleLabel.setHorizontalTextPosition(SwingConstants.CENTER); 
+        titleLabel.setVerticalTextPosition(SwingConstants.BOTTOM);  
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); 
+        StyleConfig.applyTitleStyle(titleLabel);
+        titlePanel.add(titleLabel);
+        StyleConfig.applyStyle(titlePanel);
+
+        // Form panel
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        JTextField fullNameField = new JTextField(customer.getFullName());
+        JTextField usernameField = new JTextField(customer.getUsername());
+        JTextField emailField = new JTextField(customer.getEmail());
+        JPasswordField passwordField = new JPasswordField(customer.getPassword());
+        JTextField phoneField = new JTextField(customer.getPhone());
+        JTextField addressField = new JTextField(customer.getAddress());
+
+        formPanel.add(new JLabel("Username:"));
+        formPanel.add(usernameField);
+        formPanel.add(new JLabel("Full Name:"));
+        formPanel.add(fullNameField);
+        formPanel.add(new JLabel("Email:"));
+        formPanel.add(emailField);
+        formPanel.add(new JLabel("Password:"));
+        formPanel.add(passwordField);
+        formPanel.add(new JLabel("Phone:"));
+        formPanel.add(phoneField);
+        formPanel.add(new JLabel("Address:"));
+        formPanel.add(addressField);
+
+        // Bottom panel with OK and Cancel buttons
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        JButton okButton = new JButton("Update");
+        okButton.setIcon(icons[1]);
+        okButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        okButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        okButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        okButton.setIconTextGap(10);
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.setIcon(icons[2]);
+        cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        cancelButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        cancelButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        cancelButton.setIconTextGap(10);
+        
+        StyleConfig.applyStyle(okButton);
+        StyleConfig.applyAccentStyle(cancelButton);
+        bottomPanel.add(okButton);
+        bottomPanel.add(cancelButton);
+
+        // Main panel
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Create dialog
+        JDialog dialog = new JDialog(this, "Edit Profile", true);
+        dialog.setContentPane(mainPanel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+
+        // Button actions
+        okButton.addActionListener(e -> {
+            // (Optional) Add validation here before saving
+            customer.setUsername(usernameField.getText().trim());
+            customer.setFullName(fullNameField.getText().trim());
+            customer.setEmail(emailField.getText().trim());
+            customer.setPassword(new String(passwordField.getPassword()).trim());
+            customer.setPhone(phoneField.getText().trim());
+            customer.setAddress(addressField.getText().trim());
+
+            // Save changes
+            hotelreservationsystem.dao.CustomerDAO customerDAO = new hotelreservationsystem.dao.CustomerDAO();
+            customerDAO.updateCustomer(customer);
+            JOptionPane.showMessageDialog(this, "Profile updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            dialog.dispose();
+        });
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        dialog.setVisible(true);
+    }
+
     // Getter for customer object (needed for the comment form)
     public Customer getCustomer() {
         return customer;

@@ -18,6 +18,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import hotelreservationsystem.util.UUIDUtil;
+import hotelreservationsystem.util.ValidationUtil;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 
 public class RegisterForm extends JFrame implements ActionListener {
     private JTextField usernameField;
@@ -30,6 +34,12 @@ public class RegisterForm extends JFrame implements ActionListener {
     
     private CustomerDAO customerDAO;
     
+    ImageIcon icons[] = {
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/circle-check.png")),
+        new ImageIcon(getClass().getResource("/image/user-round-plus.png"))
+    };
+    
     public RegisterForm() {
         customerDAO = new CustomerDAO();
         initComponents();
@@ -38,7 +48,7 @@ public class RegisterForm extends JFrame implements ActionListener {
     private void initComponents() {
         // Set frame properties
         setTitle("Hotel Reservation System - Register");
-        setSize(450, 300);
+        setSize(450, 400);
         setLocationRelativeTo(null);
         setResizable(false);
         
@@ -49,6 +59,10 @@ public class RegisterForm extends JFrame implements ActionListener {
         // Create title panel
         JPanel titlePanel = new JPanel();
         JLabel titleLabel = new JLabel("Customer Registration");
+        titleLabel.setIcon(icons[2]);
+        titleLabel.setHorizontalTextPosition(SwingConstants.CENTER);  // text at left
+        titleLabel.setVerticalTextPosition(SwingConstants.BOTTOM);  // center vertically
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
         StyleConfig.applyTitleStyle(titleLabel);
         titlePanel.add(titleLabel);
         StyleConfig.applyStyle(titlePanel);
@@ -100,14 +114,24 @@ public class RegisterForm extends JFrame implements ActionListener {
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         
         // Register button
-        registerButton = new JButton("Register");
+        registerButton = new JButton("Proceed");
+        registerButton.setIcon(icons[1]);
+        registerButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        registerButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        registerButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        registerButton.setIconTextGap(10);
         registerButton.addActionListener(this);
         StyleConfig.applyStyle(registerButton);
         
         // Back button
-        backButton = new JButton("Back to Login");
+        backButton = new JButton("Cancel");
+        backButton.setIcon(icons[0]);
+        backButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
+        backButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
+        backButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        backButton.setIconTextGap(10);
         backButton.addActionListener(this);
-        StyleConfig.applyStyle(backButton);
+        StyleConfig.applyAccentStyle(backButton);
         
         buttonPanel.add(registerButton);
         buttonPanel.add(backButton);
@@ -135,11 +159,15 @@ public class RegisterForm extends JFrame implements ActionListener {
     
     private void handleRegistration() {
         // Get form data
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
-        String confirmPassword = new String(confirmPasswordField.getPassword());
-        String firstName = firstNameField.getText();
-        String lastName = lastNameField.getText();
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+        String confirmPassword = new String(confirmPasswordField.getPassword()).trim();
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        
+        String fullName = firstName + " " + lastName;
+        // Generate a unique userId
+        String userId = UUIDUtil.generateShortUUID();
         
         // Validate form data
         if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || 
@@ -159,8 +187,16 @@ public class RegisterForm extends JFrame implements ActionListener {
             return;
         }
         
-        // Create new customer
-        Customer customer = new Customer(username, firstName + " " + lastName, password, username + "@example.com", "N/A", "N/A");
+        if (!ValidationUtil.isValidPassword(password)) {
+            JOptionPane.showMessageDialog(this,
+                    "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character.",
+                    "Registration Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Create new customer with updated constructor
+        Customer customer = new Customer(fullName, username, password, username + "@example.com", "N/A", "N/A");
         
         // Register customer
         boolean success = customerDAO.registerCustomer(customer);

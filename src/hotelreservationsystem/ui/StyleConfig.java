@@ -24,7 +24,7 @@ public class StyleConfig {
     // Colors
     public static final Color PRIMARY_COLOR = new Color(0, 102, 204);   // Blue
     public static final Color SECONDARY_COLOR = new Color(70, 130, 180); // Steel Blue
-    public static final Color ACCENT_COLOR = new Color(255, 102, 0);     // Orange
+    public static final Color ACCENT_COLOR = new Color(255, 0, 0);     // Red
     public static final Color BG_COLOR = new Color(240, 240, 240);       // Light Gray
     public static final Color TEXT_COLOR = new Color(50, 50, 50);        // Dark Gray
     
