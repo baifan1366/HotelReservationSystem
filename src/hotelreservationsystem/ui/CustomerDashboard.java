@@ -7,6 +7,7 @@ package hotelreservationsystem.ui;
 import hotelreservationsystem.dao.BookingDAO;
 import hotelreservationsystem.model.Booking;
 import hotelreservationsystem.model.Customer;
+import hotelreservationsystem.util.ValidationUtil;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.GridLayout;
@@ -74,7 +75,7 @@ public class CustomerDashboard extends JFrame implements ActionListener {
         // Create header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
                                                                 //full name of user
-        JLabel welcomeLabel = new JLabel("Welcome, " + customer.getUserId() + "!");
+        JLabel welcomeLabel = new JLabel("Welcome, " + customer.getFullName() + "!");
         StyleConfig.applyTitleStyle(welcomeLabel);
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
@@ -348,19 +349,77 @@ public class CustomerDashboard extends JFrame implements ActionListener {
 
         // Button actions
         okButton.addActionListener(e -> {
-            // (Optional) Add validation here before saving
-            customer.setUsername(usernameField.getText().trim());
-            customer.setFullName(fullNameField.getText().trim());
-            customer.setEmail(emailField.getText().trim());
-            customer.setPassword(new String(passwordField.getPassword()).trim());
-            customer.setPhone(phoneField.getText().trim());
-            customer.setAddress(addressField.getText().trim());
+            // Validate form fields
+            String username = usernameField.getText().trim();
+            String fullName = fullNameField.getText().trim();
+            String email = emailField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+            String phone = phoneField.getText().trim();
+            String address = addressField.getText().trim();
+            
+            // Validation checks
+            if (username.isEmpty() || fullName.isEmpty() || email.isEmpty() || 
+                    password.isEmpty() || phone.isEmpty() || address.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, 
+                        "All fields are required!", 
+                        "Update Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Username validation
+            if (!ValidationUtil.isValidUsername(username)) {
+                JOptionPane.showMessageDialog(dialog, 
+                        "Username should be 3-20 characters long and contain only letters, numbers, and underscores.", 
+                        "Update Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Name validation
+            if (!ValidationUtil.isValidName(fullName)) {
+                JOptionPane.showMessageDialog(dialog, 
+                        "Full name should contain only letters and be at least 2 characters long.", 
+                        "Update Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Email validation
+            if (!ValidationUtil.isValidEmail(email)) {
+                JOptionPane.showMessageDialog(dialog, 
+                        "Please enter a valid email address.", 
+                        "Update Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Password validation
+            if (!ValidationUtil.isValidPassword(password)) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character.",
+                        "Update Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // If all validations pass, update the customer object
+            customer.setUsername(username);
+            customer.setFullName(fullName);
+            customer.setEmail(email);
+            customer.setPassword(password);
+            customer.setPhone(phone);
+            customer.setAddress(address);
 
             // Save changes
             hotelreservationsystem.dao.CustomerDAO customerDAO = new hotelreservationsystem.dao.CustomerDAO();
             customerDAO.updateCustomer(customer);
             JOptionPane.showMessageDialog(this, "Profile updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             dialog.dispose();
+            
+            // Update the welcome label with new name
+            JLabel welcomeLabel = (JLabel) ((JPanel) ((JPanel) getContentPane().getComponent(0)).getComponent(0)).getComponent(0);
+            welcomeLabel.setText("Welcome, " + customer.getFullName() + "!");
         });
 
         cancelButton.addActionListener(e -> dialog.dispose());

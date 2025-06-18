@@ -5,6 +5,7 @@ import hotelreservationsystem.dao.CommentDAO;
 import hotelreservationsystem.dao.RoomDAO;
 import hotelreservationsystem.model.Booking;
 import hotelreservationsystem.model.Comment;
+import hotelreservationsystem.model.Customer;
 import hotelreservationsystem.model.Room;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -13,12 +14,17 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -38,16 +44,22 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
     private DefaultTableModel commentsTableModel;
     private JButton closeButton;
     private JButton addCommentButton;
+    private JButton editCommentButton;
+    private JButton deleteCommentButton;
     private RoomDAO roomDAO;
     private BookingDAO bookingDAO;
     private CommentDAO commentDAO;
     private JTabbedPane tabbedPane;
     private JLabel ratingLabel;
     private SimpleDateFormat dateFormat;
+    private int lastSelectedRoomNumber = -1;
+    private Map<Integer, Comment> commentRowMap = new HashMap<>();
 
     ImageIcon icons[] = {
         new ImageIcon(getClass().getResource("/image/message-circle.png")),
-        new ImageIcon(getClass().getResource("/image/circle-x.png"))
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/settings.png")), // Edit icon
+        new ImageIcon(getClass().getResource("/image/file-x-2.png"))  // Delete icon
     };
     
     public RoomDetailsDialog(JFrame parent) {
@@ -57,6 +69,20 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         this.commentDAO = new CommentDAO();
         this.dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         initComponents();
+        
+        // Add window listener to refresh data when dialog is shown
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowActivated(WindowEvent e) {
+                // Refresh data when dialog becomes visible
+                refreshAllData();
+                
+                // If a room was previously selected, refresh its data
+                if (lastSelectedRoomNumber != -1) {
+                    updateSelectedRoomData();
+                }
+            }
+        });
     }
 
     private void initComponents() {
@@ -107,25 +133,48 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         };
         commentsTable = new JTable(commentsTableModel);
         commentsTable.setPreferredScrollableViewportSize(new Dimension(500, 400));
+        commentsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane commentsScrollPane = new JScrollPane(commentsTable);
         
-        // Add comment button
+        // Comment management buttons
         addCommentButton = new JButton("Add Comment");
         addCommentButton.setIcon(icons[0]);
-        addCommentButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
-        addCommentButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
-        addCommentButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
+        addCommentButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        addCommentButton.setVerticalTextPosition(SwingConstants.CENTER);
+        addCommentButton.setHorizontalAlignment(SwingConstants.CENTER);
         addCommentButton.setIconTextGap(10);
         addCommentButton.addActionListener(this);
         StyleConfig.applyStyle(addCommentButton);
         addCommentButton.setEnabled(false); // Disabled until a room is selected
         
-        // Comments panel with button
+        editCommentButton = new JButton("Edit Comment");
+        editCommentButton.setIcon(icons[2]);
+        editCommentButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        editCommentButton.setVerticalTextPosition(SwingConstants.CENTER);
+        editCommentButton.setHorizontalAlignment(SwingConstants.CENTER);
+        editCommentButton.setIconTextGap(10);
+        editCommentButton.addActionListener(this);
+        StyleConfig.applyStyle(editCommentButton);
+        editCommentButton.setEnabled(false); // Disabled until a comment is selected
+        
+        deleteCommentButton = new JButton("Delete Comment");
+        deleteCommentButton.setIcon(icons[3]);
+        deleteCommentButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        deleteCommentButton.setVerticalTextPosition(SwingConstants.CENTER);
+        deleteCommentButton.setHorizontalAlignment(SwingConstants.CENTER);
+        deleteCommentButton.setIconTextGap(10);
+        deleteCommentButton.addActionListener(this);
+        StyleConfig.applyStyle(deleteCommentButton);
+        deleteCommentButton.setEnabled(false); // Disabled until a comment is selected
+        
+        // Comments panel with buttons
         JPanel commentsPanel = new JPanel(new BorderLayout(5, 5));
         commentsPanel.add(commentsScrollPane, BorderLayout.CENTER);
         
         JPanel commentButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         commentButtonPanel.add(addCommentButton);
+        commentButtonPanel.add(editCommentButton);
+        commentButtonPanel.add(deleteCommentButton);
         commentsPanel.add(commentButtonPanel, BorderLayout.SOUTH);
         
         // Rating label
@@ -143,15 +192,27 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
                 int selectedRow = roomsTable.getSelectedRow();
                 if (selectedRow != -1) {
                     int roomNumber = (int) roomsTableModel.getValueAt(selectedRow, 0);
+                    lastSelectedRoomNumber = roomNumber;
                     Room room = getRoomByNumber(roomNumber);
                     
                     loadBookingsForRoom(roomNumber);
                     loadCommentsForRoom(room.getRoomId());
                     updateRatingDisplay(room.getRoomId());
                     
-                    // Enable add comment button
-                    addCommentButton.setEnabled(true);
+                    // Check if customer has booked this room before enabling the comment button
+                    updateCommentButtonState(roomNumber);
+                    
+                    // Reset comment management buttons
+                    editCommentButton.setEnabled(false);
+                    deleteCommentButton.setEnabled(false);
                 }
+            }
+        });
+        
+        // Add listener for comments table selection
+        commentsTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateCommentManagementButtons();
             }
         });
 
@@ -193,6 +254,65 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         
         // Load rooms data
         loadRoomsData();
+    }
+    
+    // Update comment management buttons based on selection
+    private void updateCommentManagementButtons() {
+        int selectedRow = commentsTable.getSelectedRow();
+        if (selectedRow != -1) {
+            // Check if the comment belongs to the current customer
+            String customerName = (String) commentsTableModel.getValueAt(selectedRow, 0);
+            Comment comment = commentRowMap.get(selectedRow);
+            
+            if (comment != null && getParent() instanceof CustomerDashboard) {
+                CustomerDashboard dashboard = (CustomerDashboard) getParent();
+                Customer customer = dashboard.getCustomer();
+                
+                // Enable edit/delete only if this is the customer's comment
+                boolean isCustomerComment = comment.getCustomerId().equals(customer.getUserId());
+                editCommentButton.setEnabled(isCustomerComment);
+                deleteCommentButton.setEnabled(isCustomerComment);
+            } else {
+                editCommentButton.setEnabled(false);
+                deleteCommentButton.setEnabled(false);
+            }
+        } else {
+            editCommentButton.setEnabled(false);
+            deleteCommentButton.setEnabled(false);
+        }
+    }
+    
+    // Method to refresh all data in the dialog
+    public void refreshAllData() {
+        loadRoomsData();
+    }
+    
+    // Update the data for the selected room
+    private void updateSelectedRoomData() {
+        int roomNumber = lastSelectedRoomNumber;
+        if (roomNumber != -1) {
+            Room room = getRoomByNumber(roomNumber);
+            if (room != null) {
+                loadBookingsForRoom(roomNumber);
+                loadCommentsForRoom(room.getRoomId());
+                updateRatingDisplay(room.getRoomId());
+                updateCommentButtonState(roomNumber);
+            }
+        }
+    }
+    
+    // Update the comment button state based on booking status
+    private void updateCommentButtonState(int roomNumber) {
+        Customer customer = null;
+        if (getParent() instanceof CustomerDashboard) {
+            CustomerDashboard dashboard = (CustomerDashboard) getParent();
+            customer = dashboard.getCustomer();
+            
+            // Only enable the button if customer has booked this room
+            addCommentButton.setEnabled(hasCustomerBookedRoom(customer, roomNumber));
+        } else {
+            addCommentButton.setEnabled(false);
+        }
     }
 
     private void loadRoomsData() {
@@ -239,13 +359,15 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
     
     private void loadCommentsForRoom(int roomId) {
         commentsTableModel.setRowCount(0);
+        commentRowMap.clear(); // Clear the mapping
         Comment[] comments = commentDAO.getCommentsByRoom(roomId);
         
-        for (Comment comment : comments) {
+        for (int i = 0; i < comments.length; i++) {
+            Comment comment = comments[i];
             if (comment != null) {
                 // Generate stars for the rating
                 String stars = "";
-                for (int i = 0; i < comment.getRating(); i++) {
+                for (int j = 0; j < comment.getRating(); j++) {
                     stars += "★";
                 }
                 
@@ -256,8 +378,15 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
                     dateFormat.format(comment.getCommentDate())
                 };
                 commentsTableModel.addRow(rowData);
+                
+                // Store the comment in our map
+                commentRowMap.put(commentsTableModel.getRowCount() - 1, comment);
             }
         }
+        
+        // Reset comment management buttons
+        editCommentButton.setEnabled(false);
+        deleteCommentButton.setEnabled(false);
     }
     
     private void updateRatingDisplay(int roomId) {
@@ -290,6 +419,21 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
         return null;
     }
     
+    // Check if a customer has booked a specific room
+    private boolean hasCustomerBookedRoom(Customer customer, int roomNumber) {
+        if (customer == null) {
+            return false;
+        }
+        
+        Booking[] bookings = bookingDAO.getBookingsByCustomer(customer);
+        for (Booking booking : bookings) {
+            if (booking != null && booking.getRoom().getRoomNumber() == roomNumber) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     // Method to refresh comments (called from CommentForm)
     public void refreshComments() {
         int selectedRow = roomsTable.getSelectedRow();
@@ -309,7 +453,96 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
             dispose();
         } else if (e.getSource() == addCommentButton) {
             openCommentForm();
+        } else if (e.getSource() == editCommentButton) {
+            editSelectedComment();
+        } else if (e.getSource() == deleteCommentButton) {
+            deleteSelectedComment();
         }
+    }
+    
+    // Method to edit the selected comment
+    private void editSelectedComment() {
+        int selectedRow = commentsTable.getSelectedRow();
+        if (selectedRow != -1) {
+            Comment selectedComment = commentRowMap.get(selectedRow);
+            if (selectedComment != null) {
+                int roomNumber = lastSelectedRoomNumber;
+                Room room = getRoomByNumber(roomNumber);
+                
+                if (getParent() instanceof CustomerDashboard) {
+                    CustomerDashboard dashboard = (CustomerDashboard) getParent();
+                    Customer customer = dashboard.getCustomer();
+                    
+                    // Check if this is the customer's comment
+                    if (selectedComment.getCustomerId().equals(customer.getUserId())) {
+                        // Open edit form
+                        JFrame owner = (JFrame) this.getOwner();
+                        CommentForm commentForm = new CommentForm(owner, customer, room, selectedComment);
+                        commentForm.setVisible(true);
+                        
+                        // After form closes, refresh comments
+                        refreshComments();
+                    } else {
+                        MessageDialog.showWarning(this, "Cannot Edit Comment", "You can only edit your own comments.");
+                    }
+                }
+            }
+        }
+    }
+    
+    // Method to delete the selected comment
+    private void deleteSelectedComment() {
+        int selectedRow = commentsTable.getSelectedRow();
+        if (selectedRow != -1) {
+            Comment selectedComment = commentRowMap.get(selectedRow);
+            if (selectedComment != null) {
+                if (getParent() instanceof CustomerDashboard) {
+                    CustomerDashboard dashboard = (CustomerDashboard) getParent();
+                    Customer customer = dashboard.getCustomer();
+                    
+                    // Check if this is the customer's comment
+                    if (selectedComment.getCustomerId().equals(customer.getUserId())) {
+                        // Confirm deletion
+                        int response = JOptionPane.showConfirmDialog(
+                            this,
+                            "Are you sure you want to delete this comment?",
+                            "Confirm Deletion",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE
+                        );
+                        
+                        if (response == JOptionPane.YES_OPTION) {
+                            // Delete the comment
+                            boolean success = commentDAO.deleteComment(selectedComment.getCommentId());
+                            if (success) {
+                                // Refresh comments
+                                refreshComments();
+                                MessageDialog.showInformation(this, "Success", "Comment deleted successfully.");
+                            } else {
+                                MessageDialog.showError(this, "Error", "Failed to delete comment.");
+                            }
+                        }
+                    } else {
+                        MessageDialog.showWarning(this, "Cannot Delete Comment", "You can only delete your own comments.");
+                    }
+                }
+            }
+        }
+    }
+    
+    // This method is used to refresh the dialog when it's made visible again
+    @Override
+    public void setVisible(boolean visible) {
+        if (visible) {
+            // Refresh data each time dialog is shown
+            refreshAllData();
+            
+            // If a room was previously selected, refresh its data
+            if (lastSelectedRoomNumber != -1) {
+                updateSelectedRoomData();
+            }
+        }
+        super.setVisible(visible);
     }
     
     private void openCommentForm() {
@@ -321,10 +554,17 @@ public class RoomDetailsDialog extends JDialog implements ActionListener {
             // Get customer from parent (CustomerDashboard)
             if (getParent() instanceof CustomerDashboard) {
                 CustomerDashboard dashboard = (CustomerDashboard) getParent();
-                // Get the JFrame owner of this dialog
-                JFrame owner = (JFrame) this.getOwner();
-                CommentForm commentForm = new CommentForm(owner, dashboard.getCustomer(), room);
-                commentForm.setVisible(true);
+                Customer customer = dashboard.getCustomer();
+                
+                // Check if customer has booked this room
+                if (hasCustomerBookedRoom(customer, roomNumber)) {
+                    // Get the JFrame owner of this dialog
+                    JFrame owner = (JFrame) this.getOwner();
+                    CommentForm commentForm = new CommentForm(owner, customer, room);
+                    commentForm.setVisible(true);
+                } else {
+                    MessageDialog.showWarning(this, "Cannot Add Comment", "You can only comment on rooms you have booked.");
+                }
             } else {
                 MessageDialog.showWarning(this, "Warning", "You must be logged in as a customer to add comments.");
             }

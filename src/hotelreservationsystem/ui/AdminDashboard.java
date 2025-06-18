@@ -9,10 +9,12 @@ import hotelreservationsystem.dao.AdminDAO;
 import hotelreservationsystem.dao.BookingDAO;
 import hotelreservationsystem.dao.FileManager;
 import hotelreservationsystem.dao.RoomDAO;
+import hotelreservationsystem.dao.CommentDAO;
 import hotelreservationsystem.model.Admin;
 import hotelreservationsystem.model.Booking;
 import hotelreservationsystem.model.Room;
 import hotelreservationsystem.model.User;
+import hotelreservationsystem.model.Comment;
 import hotelreservationsystem.util.UUIDUtil;
 import hotelreservationsystem.util.ValidationUtil;
 import java.awt.BorderLayout;
@@ -38,11 +40,16 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.ListSelectionModel;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class AdminDashboard extends JFrame implements ActionListener {
     private Admin admin;
     private JTabbedPane tabbedPane;
     private JButton addRoomButton;
+    private JButton editButton;
+    private JButton deleteButton;
     private JButton addAdminButton;
     private JButton addAdminListButton;
     private JButton addCustomerListButton;
@@ -52,9 +59,12 @@ public class AdminDashboard extends JFrame implements ActionListener {
     private DefaultTableModel roomsTableModel;
     private JTable bookingsTable;
     private DefaultTableModel bookingsTableModel;
+    private JTable commentsTable;
+    private DefaultTableModel commentsTableModel;
     
     private RoomDAO roomDAO;
     private BookingDAO bookingDAO;
+    private CommentDAO commentDAO;
     
     ImageIcon icons[] = {
         new ImageIcon(getClass().getResource("/image/log-out.png")),
@@ -64,13 +74,16 @@ public class AdminDashboard extends JFrame implements ActionListener {
         new ImageIcon(getClass().getResource("/image/user-round-plus.png")),
         new ImageIcon(getClass().getResource("/image/user-cog.png")),
         new ImageIcon(getClass().getResource("/image/users.png")),
-        new ImageIcon(getClass().getResource("/image/clipboard-list.png"))
+        new ImageIcon(getClass().getResource("/image/clipboard-list.png")),
+        new ImageIcon(getClass().getResource("/image/settings.png")),  // Edit icon
+        new ImageIcon(getClass().getResource("/image/file-x-2.png"))   // Delete icon
     };
     
     public AdminDashboard(Admin admin) {
         this.admin = admin;
         this.roomDAO = new RoomDAO();
         this.bookingDAO = new BookingDAO();
+        this.commentDAO = new CommentDAO();
         initComponents();
     }
     
@@ -92,7 +105,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
         // Create button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 6, 10, 0));
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 4, 10, 10));
         
         // Add room button
         addRoomButton = new JButton("New Room");
@@ -103,6 +116,28 @@ public class AdminDashboard extends JFrame implements ActionListener {
         addRoomButton.setIconTextGap(10);
         addRoomButton.addActionListener(this);
         StyleConfig.applyStyle(addRoomButton);
+        
+        // Edit button (generic - will be context-sensitive)
+        editButton = new JButton("Edit Room");
+        editButton.setIcon(icons[8]);
+        editButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        editButton.setVerticalTextPosition(SwingConstants.CENTER);
+        editButton.setHorizontalAlignment(SwingConstants.CENTER);
+        editButton.setIconTextGap(10);
+        editButton.addActionListener(this);
+        StyleConfig.applyStyle(editButton);
+        editButton.setEnabled(false); // Initially disabled until an item is selected
+        
+        // Delete button (generic - will be context-sensitive)
+        deleteButton = new JButton("Delete Room");
+        deleteButton.setIcon(icons[9]);
+        deleteButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        deleteButton.setVerticalTextPosition(SwingConstants.CENTER);
+        deleteButton.setHorizontalAlignment(SwingConstants.CENTER);
+        deleteButton.setIconTextGap(10);
+        deleteButton.addActionListener(this);
+        StyleConfig.applyStyle(deleteButton);
+        deleteButton.setEnabled(false); // Initially disabled until an item is selected
         
         // Add admin button
         addAdminButton = new JButton("New Admin");
@@ -155,6 +190,8 @@ public class AdminDashboard extends JFrame implements ActionListener {
         StyleConfig.applyAccentStyle(logoutButton);
         
         buttonPanel.add(addRoomButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
         buttonPanel.add(addAdminButton);
         buttonPanel.add(addAdminListButton);
         buttonPanel.add(addCustomerListButton);
@@ -172,6 +209,10 @@ public class AdminDashboard extends JFrame implements ActionListener {
         JPanel bookingsPanel = createBookingsPanel();
         tabbedPane.addTab("Bookings", bookingsPanel);
         
+        // Add comments panel
+        JPanel commentsPanel = createCommentsPanel();
+        tabbedPane.addTab("Comments", commentsPanel);
+        
         // Add components to main panel
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
@@ -182,15 +223,52 @@ public class AdminDashboard extends JFrame implements ActionListener {
         StyleConfig.applyStyle(headerPanel);
         StyleConfig.applyStyle(buttonPanel);
         
+        // Add tab change listener to update button labels and behavior
+        tabbedPane.addChangeListener(e -> {
+            updateButtonsForSelectedTab();
+            // Extra check to ensure buttons are disabled when Comments tab is selected
+            if (tabbedPane.getSelectedIndex() == 2) {
+                editButton.setEnabled(false);
+                deleteButton.setEnabled(false);
+            }
+        });
+        
         // Add main panel to frame
         add(mainPanel);
+    }
+    
+    // Method to update button labels and behavior based on the selected tab
+    private void updateButtonsForSelectedTab() {
+        int selectedTab = tabbedPane.getSelectedIndex();
+        
+        switch (selectedTab) {
+            case 0: // Rooms tab
+                editButton.setText("Edit Room");
+                deleteButton.setText("Delete Room");
+                editButton.setEnabled(roomsTable.getSelectedRow() != -1);
+                deleteButton.setEnabled(roomsTable.getSelectedRow() != -1);
+                break;
+            case 1: // Bookings tab
+                editButton.setText("Edit Booking");
+                deleteButton.setText("Delete Booking");
+                editButton.setEnabled(bookingsTable.getSelectedRow() != -1);
+                deleteButton.setEnabled(bookingsTable.getSelectedRow() != -1);
+                break;
+            case 2: // Comments tab
+                editButton.setText("Edit Comment");
+                deleteButton.setText("Delete Comment");
+                // Disable edit and delete buttons for comments
+                editButton.setEnabled(false);
+                deleteButton.setEnabled(false);
+                break;
+        }
     }
     
     private JPanel createRoomsPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         
         // Create rooms table
-        String[] columnNames = {"Room Number", "Room Type", "Price per Night", "Available"};
+        String[] columnNames = {"Room Number", "Room Type", "Price per Night", "Available", "Average Rating"};
         roomsTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -199,7 +277,17 @@ public class AdminDashboard extends JFrame implements ActionListener {
         };
         
         roomsTable = new JTable(roomsTableModel);
+        roomsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(roomsTable);
+        
+        // Add mouse listener for room selection
+        roomsTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tabbedPane.getSelectedIndex() == 0) {
+                boolean hasSelection = roomsTable.getSelectedRow() != -1;
+                editButton.setEnabled(hasSelection);
+                deleteButton.setEnabled(hasSelection);
+            }
+        });
         
         // Load rooms data
         loadRoomsData();
@@ -222,10 +310,53 @@ public class AdminDashboard extends JFrame implements ActionListener {
         };
         
         bookingsTable = new JTable(bookingsTableModel);
+        bookingsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(bookingsTable);
+        
+        // Add selection listener for bookings
+        bookingsTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tabbedPane.getSelectedIndex() == 1) {
+                boolean hasSelection = bookingsTable.getSelectedRow() != -1;
+                editButton.setEnabled(hasSelection);
+                deleteButton.setEnabled(hasSelection);
+            }
+        });
         
         // Load bookings data
         loadBookingsData();
+        
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPanel createCommentsPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        
+        // Create comments table
+        String[] columnNames = {"Comment ID", "Room Number", "Customer", "Rating", "Comment", "Date"};
+        commentsTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table cells non-editable
+            }
+        };
+        
+        commentsTable = new JTable(commentsTableModel);
+        JScrollPane scrollPane = new JScrollPane(commentsTable);
+        
+        // Add selection listener for comments - keep buttons disabled even when a comment is selected
+        commentsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        commentsTable.getSelectionModel().addListSelectionListener(e -> {
+            // Always keep buttons disabled for comments, regardless of selection
+            if (tabbedPane.getSelectedIndex() == 2) {
+                editButton.setEnabled(false);
+                deleteButton.setEnabled(false);
+            }
+        });
+        
+        // Load comments data
+        loadCommentsData();
         
         panel.add(scrollPane, BorderLayout.CENTER);
         
@@ -244,15 +375,44 @@ public class AdminDashboard extends JFrame implements ActionListener {
         for (int i = 0; i < roomCount; i++) {
             Room room = rooms[i];
             if (room != null) {
+                // Calculate average rating for this room
+                String avgRating = calculateAverageRating(room);
+                
                 Object[] rowData = {
                     room.getRoomNumber(),
                     room.getType(),
                     room.getPricePerNight(),
-                    room.isAvailable() ? "Yes" : "No"
+                    room.isAvailable() ? "Yes" : "No",
+                    avgRating
                 };
                 roomsTableModel.addRow(rowData);
             }
         }
+    }
+    
+    // Helper method to calculate average rating for a room
+    private String calculateAverageRating(Room room) {
+        Comment[] comments = commentDAO.getCommentsByRoom(room.getRoomId());
+        if (comments.length == 0) {
+            return "No ratings";
+        }
+        
+        double totalRating = 0;
+        int ratingCount = 0;
+        
+        for (Comment comment : comments) {
+            if (comment != null) {
+                totalRating += comment.getRating();
+                ratingCount++;
+            }
+        }
+        
+        if (ratingCount == 0) {
+            return "No ratings";
+        }
+        
+        double avgRating = totalRating / ratingCount;
+        return String.format("%.1f/5", avgRating);
     }
     
     private void loadBookingsData() {
@@ -269,11 +429,42 @@ public class AdminDashboard extends JFrame implements ActionListener {
                     booking.getBookingId(),
                     booking.getCustomer().getFullName(),
                     booking.getRoom().getRoomNumber(),
-                    booking.getCheckInDate(),
-                    booking.getCheckOutDate(),
+                    booking.getCheckInDateString(),
+                    booking.getCheckOutDateString(),
                     booking.isPaid() ? "Paid" : "Pending Payment"
                 };
                 bookingsTableModel.addRow(rowData);
+            }
+        }
+    }
+    
+    private void loadCommentsData() {
+        // Clear existing data
+        commentsTableModel.setRowCount(0);
+        
+        // Get all rooms to fetch their comments
+        Room[] rooms = HotelReservationSystem.getRooms();
+        int roomCount = HotelReservationSystem.getRoomCount();
+        
+        // For each room, get its comments and add to table
+        for (int i = 0; i < roomCount; i++) {
+            Room room = rooms[i];
+            if (room != null) {
+                Comment[] roomComments = commentDAO.getCommentsByRoom(room.getRoomId());
+                
+                for (Comment comment : roomComments) {
+                    if (comment != null) {
+                        Object[] rowData = {
+                            comment.getCommentId(),
+                            room.getRoomNumber(),
+                            comment.getCustomerName(),
+                            comment.getRating() + "/5",
+                            comment.getComment(),
+                            comment.getCommentDate()
+                        };
+                        commentsTableModel.addRow(rowData);
+                    }
+                }
             }
         }
     }
@@ -282,6 +473,32 @@ public class AdminDashboard extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addRoomButton) {
             addNewRoom();
+        } else if (e.getSource() == editButton) {
+            int selectedTab = tabbedPane.getSelectedIndex();
+            switch (selectedTab) {
+                case 0:
+                    editSelectedRoom();
+                    break;
+                case 1:
+                    editSelectedBooking();
+                    break;
+                case 2:
+                    // No editing for comments - do nothing
+                    break;
+            }
+        } else if (e.getSource() == deleteButton) {
+            int selectedTab = tabbedPane.getSelectedIndex();
+            switch (selectedTab) {
+                case 0:
+                    deleteSelectedRoom();
+                    break;
+                case 1:
+                    deleteSelectedBooking();
+                    break;
+                case 2:
+                    // No deletion for comments - do nothing
+                    break;
+            }
         } else if (e.getSource() == addAdminButton) {
             addNewAdmin();
         } else if (e.getSource() == addAdminListButton) {
@@ -350,6 +567,186 @@ public class AdminDashboard extends JFrame implements ActionListener {
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Invalid number format!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void editSelectedRoom() {
+        int selectedRow = roomsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a room to edit.");
+            return;
+        }
+        
+        try {
+            // Get selected room details
+            int roomNumber = (int) roomsTableModel.getValueAt(selectedRow, 0);
+            Room room = roomDAO.findRoomByNumber(roomNumber);
+            
+            if (room == null) {
+                JOptionPane.showMessageDialog(this, "Room not found!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Create edit room dialog
+            JDialog dialog = new JDialog(this, "Edit Room", true);
+            dialog.setSize(400, 300);
+            dialog.setLocationRelativeTo(this);
+            
+            // Create layout
+            JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+            mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            
+            // Form panel
+            JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+            
+            // Room number display (not editable)
+            JLabel roomNumberLabel = new JLabel("Room Number:");
+            JLabel roomNumberValue = new JLabel(String.valueOf(room.getRoomNumber()));
+            formPanel.add(roomNumberLabel);
+            formPanel.add(roomNumberValue);
+            
+            // Room type selection
+            JLabel typeLabel = new JLabel("Room Type:");
+            JPanel typePanel = new JPanel(new GridLayout(3, 1));
+            JRadioButton singleBtn = new JRadioButton("Single");
+            JRadioButton doubleBtn = new JRadioButton("Double");
+            JRadioButton suiteBtn = new JRadioButton("Suite");
+            
+            // Set current room type
+            if ("Single".equals(room.getType())) {
+                singleBtn.setSelected(true);
+            } else if ("Double".equals(room.getType())) {
+                doubleBtn.setSelected(true);
+            } else if ("Suite".equals(room.getType())) {
+                suiteBtn.setSelected(true);
+            }
+            
+            ButtonGroup group = new ButtonGroup();
+            group.add(singleBtn);
+            group.add(doubleBtn);
+            group.add(suiteBtn);
+            
+            typePanel.add(singleBtn);
+            typePanel.add(doubleBtn);
+            typePanel.add(suiteBtn);
+            
+            formPanel.add(typeLabel);
+            formPanel.add(typePanel);
+            
+            // Price field
+            JLabel priceLabel = new JLabel("Price per Night:");
+            JTextField priceField = new JTextField(String.valueOf(room.getPricePerNight()));
+            formPanel.add(priceLabel);
+            formPanel.add(priceField);
+            
+            // Buttons panel
+            JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JButton saveButton = new JButton("Save Changes");
+            saveButton.setIcon(icons[1]);
+            saveButton.setHorizontalTextPosition(SwingConstants.LEFT);
+            
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setIcon(icons[2]);
+            cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);
+            
+            buttonsPanel.add(saveButton);
+            buttonsPanel.add(cancelButton);
+            
+            // Add panels to main panel
+            mainPanel.add(formPanel, BorderLayout.CENTER);
+            mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+            
+            // Add action listeners
+            saveButton.addActionListener(e -> {
+                try {
+                    // Get new values
+                    String type = singleBtn.isSelected() ? "Single" : (doubleBtn.isSelected() ? "Double" : "Suite");
+                    double price = Double.parseDouble(priceField.getText().trim());
+                    
+                    // Validate price
+                    if (price < 1.00) {
+                        JOptionPane.showMessageDialog(dialog, "Price must be at least 1.00", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    
+                    // Format price to 2 decimal places
+                    price = Double.parseDouble(String.format("%.2f", price));
+                    
+                    // Update room
+                    room.setType(type);
+                    room.setPrice(price);
+                    boolean success = roomDAO.updateRoom(room);
+                    
+                    if (success) {
+                        JOptionPane.showMessageDialog(dialog, "Room updated successfully!");
+                        loadRoomsData(); // Refresh rooms table
+                        dialog.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "Failed to update room!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(dialog, "Invalid price format! Please enter a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            
+            cancelButton.addActionListener(e -> dialog.dispose());
+            
+            // Apply styling
+            StyleConfig.applyStyle(formPanel);
+            StyleConfig.applyStyle(buttonsPanel);
+            StyleConfig.applyStyle(saveButton);
+            StyleConfig.applyAccentStyle(cancelButton);
+            
+            // Set content pane and show dialog
+            dialog.setContentPane(mainPanel);
+            dialog.setVisible(true);
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error editing room: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void deleteSelectedRoom() {
+        int selectedRow = roomsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a room to delete.");
+            return;
+        }
+        
+        int roomNumber = (int) roomsTableModel.getValueAt(selectedRow, 0);
+        Room room = roomDAO.findRoomByNumber(roomNumber);
+        
+        if (room == null) {
+            JOptionPane.showMessageDialog(this, "Room not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Check if room is already booked/not available
+        if (!room.isAvailable()) {
+            JOptionPane.showMessageDialog(this, 
+                "Cannot delete room #" + roomNumber + " because it is currently booked.", 
+                "Room in Use", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Confirm deletion
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete Room #" + roomNumber + "?",
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = roomDAO.deleteRoom(roomNumber);
+            
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Room #" + roomNumber + " deleted successfully.");
+                loadRoomsData(); // Refresh rooms table
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to delete room. Please try again.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
     
@@ -532,6 +929,7 @@ public class AdminDashboard extends JFrame implements ActionListener {
     public void refreshDashboard() {
         loadRoomsData();
         loadBookingsData();
+        loadCommentsData();
     }
     
     // Placeholder method for showing admin list
@@ -624,5 +1022,184 @@ public class AdminDashboard extends JFrame implements ActionListener {
         }
         panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
+    }
+
+    // Methods for editing and deleting bookings
+    private void editSelectedBooking() {
+        int selectedRow = bookingsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a booking to edit.");
+            return;
+        }
+        
+        try {
+            // Get selected booking details
+            String bookingId = String.valueOf(bookingsTableModel.getValueAt(selectedRow, 0));
+            Booking booking = bookingDAO.getBookingById(bookingId);
+            
+            if (booking == null) {
+                JOptionPane.showMessageDialog(this, "Booking not found!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Create edit booking dialog
+            JDialog dialog = new JDialog(this, "Edit Booking", true);
+            dialog.setSize(450, 400); // Increased height for payment status
+            dialog.setLocationRelativeTo(this);
+            
+            // Create layout
+            JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+            mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            
+            // Form panel - increased to 6 rows for payment status
+            JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+            
+            // Booking ID (non-editable)
+            JLabel bookingIdLabel = new JLabel("Booking ID:");
+            JLabel bookingIdValue = new JLabel(String.valueOf(booking.getBookingId()));
+            formPanel.add(bookingIdLabel);
+            formPanel.add(bookingIdValue);
+            
+            // Customer info (non-editable)
+            JLabel customerLabel = new JLabel("Customer:");
+            JLabel customerValue = new JLabel(booking.getCustomer().getFullName());
+            formPanel.add(customerLabel);
+            formPanel.add(customerValue);
+            
+            // Room number (non-editable) - Get directly from the table model for the selected row
+            JLabel roomLabel = new JLabel("Room Number:");
+            int roomNumber = (int) bookingsTableModel.getValueAt(selectedRow, 2);
+            JLabel roomValue = new JLabel(String.valueOf(roomNumber));
+            formPanel.add(roomLabel);
+            formPanel.add(roomValue);
+            
+            // Check-in date (non-editable)
+            JLabel checkInLabel = new JLabel("Check-in Date:");
+            JTextField checkInField = new JTextField(booking.getCheckInDateString());
+            checkInField.setEditable(false);
+            formPanel.add(checkInLabel);
+            formPanel.add(checkInField);
+            
+            // Check-out date (non-editable)
+            JLabel checkOutLabel = new JLabel("Check-out Date:");
+            JTextField checkOutField = new JTextField(booking.getCheckOutDateString());
+            checkOutField.setEditable(false);
+            formPanel.add(checkOutLabel);
+            formPanel.add(checkOutField);
+            
+            // Payment status (editable)
+            JLabel paymentLabel = new JLabel("Payment Status:");
+            JPanel paymentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            JRadioButton paidBtn = new JRadioButton("Paid");
+            JRadioButton pendingBtn = new JRadioButton("Pending Payment");
+            ButtonGroup paymentGroup = new ButtonGroup();
+            paymentGroup.add(paidBtn);
+            paymentGroup.add(pendingBtn);
+            
+            // Set current payment status
+            if (booking.isPaid()) {
+                paidBtn.setSelected(true);
+            } else {
+                pendingBtn.setSelected(true);
+            }
+            
+            paymentPanel.add(paidBtn);
+            paymentPanel.add(pendingBtn);
+            formPanel.add(paymentLabel);
+            formPanel.add(paymentPanel);
+            
+            // Buttons panel
+            JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JButton saveButton = new JButton("Save Changes");
+            saveButton.setIcon(icons[1]);
+            saveButton.setHorizontalTextPosition(SwingConstants.LEFT);
+            
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setIcon(icons[2]);
+            cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);
+            
+            buttonsPanel.add(saveButton);
+            buttonsPanel.add(cancelButton);
+            
+            // Add panels to main panel
+            mainPanel.add(formPanel, BorderLayout.CENTER);
+            mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+            
+            // Add action listeners
+            saveButton.addActionListener(e -> {
+                try {
+                    // Get new values
+                    boolean isPaid = paidBtn.isSelected();
+                    
+                    // Update booking - only update payment status
+                    booking.setPaid(isPaid);
+                    boolean success = bookingDAO.updateBooking(booking);
+                    
+                    if (success) {
+                        JOptionPane.showMessageDialog(dialog, "Booking updated successfully!");
+                        loadBookingsData(); // Refresh bookings table
+                        dialog.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "Failed to update booking!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dialog, "Error updating booking: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            
+            cancelButton.addActionListener(e -> dialog.dispose());
+            
+            // Apply styling
+            StyleConfig.applyStyle(formPanel);
+            StyleConfig.applyStyle(buttonsPanel);
+            StyleConfig.applyStyle(saveButton);
+            StyleConfig.applyAccentStyle(cancelButton);
+            
+            // Set content pane and show dialog
+            dialog.setContentPane(mainPanel);
+            dialog.setVisible(true);
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error editing booking: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void deleteSelectedBooking() {
+        int selectedRow = bookingsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a booking to delete.");
+            return;
+        }
+        
+        String bookingId = String.valueOf(bookingsTableModel.getValueAt(selectedRow, 0));
+        Booking booking = bookingDAO.getBookingById(bookingId);
+        
+        if (booking == null) {
+            JOptionPane.showMessageDialog(this, "Booking not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Confirm deletion
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to cancel this booking?\nBooking ID: " + bookingId +
+                "\nCustomer: " + booking.getCustomer().getFullName() +
+                "\nRoom: " + booking.getRoom().getRoomNumber(),
+                "Confirm Cancellation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = bookingDAO.cancelBooking(bookingId);
+            
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Booking cancelled successfully.");
+                loadBookingsData(); // Refresh bookings table
+                loadRoomsData();    // Refresh rooms table as availability might have changed
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to cancel booking. Please try again.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 }

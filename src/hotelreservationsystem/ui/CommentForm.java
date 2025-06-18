@@ -1,21 +1,23 @@
 package hotelreservationsystem.ui;
 
 import hotelreservationsystem.dao.CommentDAO;
+import hotelreservationsystem.model.Comment;
 import hotelreservationsystem.model.Customer;
 import hotelreservationsystem.model.Room;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Component;
-import java.awt.Dialog;
+import java.util.Date;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -23,188 +25,218 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
-import java.awt.Dimension;
 
 public class CommentForm extends JDialog implements ActionListener {
-    private JTextArea commentTextArea;
-    private JRadioButton[] ratingButtons;
-    private JButton submitButton;
-    private JButton cancelButton;
-    
-    private CommentDAO commentDAO;
     private Customer customer;
     private Room room;
-    private Component parent;
+    private Comment existingComment;
+    private boolean isEditMode = false;
+    
+    private JRadioButton[] ratingButtons;
+    private JTextArea commentTextArea;
+    private JButton submitButton;
+    private JButton cancelButton;
+    private CommentDAO commentDAO;
+    
     ImageIcon icons[] = {
         new ImageIcon(getClass().getResource("/image/smile.png")),
         new ImageIcon(getClass().getResource("/image/angry.png")),
         new ImageIcon(getClass().getResource("/image/circle-check.png")),
         new ImageIcon(getClass().getResource("/image/circle-x.png"))
     };
-    public CommentForm(Component parent, Customer customer, Room room) {
-        super(getWindowForComponent(parent), "Add Comment and Rating", true);
-        this.parent = parent;
+    
+    public CommentForm(JFrame parent, Customer customer, Room room) {
+        super(parent, "Add Room Comment", true);
         this.customer = customer;
         this.room = room;
         this.commentDAO = new CommentDAO();
-        
         initComponents();
     }
     
-    // Helper method to get the parent window
-    private static Dialog getWindowForComponent(Component parent) {
-        if (parent instanceof Dialog) {
-            return (Dialog) parent;
-        }
-        if (parent instanceof JFrame) {
-            return null; // This will make the JDialog use JFrame as parent
-        }
-        return getWindowForComponent(parent.getParent());
+    // Constructor for editing existing comment
+    public CommentForm(JFrame parent, Customer customer, Room room, Comment comment) {
+        super(parent, "Edit Room Comment", true);
+        this.customer = customer;
+        this.room = room;
+        this.existingComment = comment;
+        this.isEditMode = true;
+        this.commentDAO = new CommentDAO();
+        initComponents();
+        // Load existing comment data
+        loadExistingComment();
     }
     
     private void initComponents() {
-        setSize(700, 400);
-        setLocationRelativeTo(parent);
-        setResizable(false);
+        setSize(400, 400);
+        setLocationRelativeTo(getParent());
         setLayout(new BorderLayout(10, 10));
-        
-        // Title Panel
-        JLabel titleLabel = new JLabel("Add Comment and Rating for Room " + room.getRoomNumber(), SwingConstants.CENTER);
-        StyleConfig.applyTitleStyle(titleLabel);
-        JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.add(titleLabel, BorderLayout.CENTER);
-        titlePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        // Comment Panel
-        JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
-        commentPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Your Comment"),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        
-        commentTextArea = new JTextArea(5, 20);
-        commentTextArea.setLineWrap(true);
-        commentTextArea.setWrapStyleWord(true);
-        JScrollPane commentScrollPane = new JScrollPane(commentTextArea);
-        commentPanel.add(commentScrollPane, BorderLayout.CENTER);
-        
-        // Rating Panel
-        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
-        ratingPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Rate this Room (1-5 stars)"),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        
-        ButtonGroup ratingGroup = new ButtonGroup();
-        ratingButtons = new JRadioButton[5];
-
-        for (int i = 0; i < 5; i++) {
-            JPanel radioWithIconPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-            radioWithIconPanel.setOpaque(false);
-
-            // Add icon[0] to the left of the first radio button
-            if (i == 0) {
-                JLabel iconLabel = new JLabel(icons[1]);
-                radioWithIconPanel.add(iconLabel);
-            }
-
-            ratingButtons[i] = new JRadioButton((i + 1) + " Star" + (i > 0 ? "s" : ""));
-            ratingGroup.add(ratingButtons[i]);
-            radioWithIconPanel.add(ratingButtons[i]);
-
-            // Add icon[1] to the right of the last radio button
-            if (i == 4) {
-                JLabel iconLabel = new JLabel(icons[0]);
-                radioWithIconPanel.add(iconLabel);
-            }
-
-            ratingPanel.add(radioWithIconPanel);
-        }
-
-        // Default to 5 stars
-        ratingButtons[4].setSelected(true);
-        
-        // Button Panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        submitButton = new JButton("Submit");
-        submitButton.setIcon(icons[2]);
-        submitButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
-        submitButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
-        submitButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
-        submitButton.setIconTextGap(10);
-        submitButton.addActionListener(this);
-        cancelButton = new JButton("Cancel");
-        cancelButton.setIcon(icons[3]);
-        cancelButton.setHorizontalTextPosition(SwingConstants.LEFT);  // text at left
-        cancelButton.setVerticalTextPosition(SwingConstants.CENTER);  // center vertically
-        cancelButton.setHorizontalAlignment(SwingConstants.CENTER);   // overall alignment
-        cancelButton.setIconTextGap(10);
-        cancelButton.addActionListener(this);
-        
-        buttonPanel.add(submitButton);
-        buttonPanel.add(cancelButton);
         
         // Main panel
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        mainPanel.add(commentPanel, BorderLayout.CENTER);
-        mainPanel.add(ratingPanel, BorderLayout.NORTH);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Add panels to dialog
-        add(titlePanel, BorderLayout.NORTH);
-        add(mainPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        // Title panel
+        JLabel titleLabel = new JLabel(isEditMode ? "Edit Comment" : "Add Comment for Room " + room.getRoomNumber());
+        StyleConfig.applyTitleStyle(titleLabel);
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.add(titleLabel);
         
-        // Apply styling
-        StyleConfig.applyStyle(mainPanel);
-        StyleConfig.applyStyle(commentPanel);
-        StyleConfig.applyStyle(ratingPanel);
-        StyleConfig.applyStyle(buttonPanel);
+        // Form panel
+        JPanel formPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        
+        // Rating panel
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel ratingLabel = new JLabel("Rating: ");
+        StyleConfig.applyStyle(ratingLabel);
+        ratingPanel.add(ratingLabel);
+        
+        // Rating buttons
+        ButtonGroup ratingGroup = new ButtonGroup();
+        ratingButtons = new JRadioButton[5];
+        
+        for (int i = 0; i < 5; i++) {
+            ratingButtons[i] = new JRadioButton((i + 1) + " ★");
+            StyleConfig.applyStyle(ratingButtons[i]);
+            ratingGroup.add(ratingButtons[i]);
+            ratingPanel.add(ratingButtons[i]);
+        }
+        
+        // Default select 5 stars
+        ratingButtons[4].setSelected(true);
+        
+        // Comment panel
+        JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
+        JLabel commentLabel = new JLabel("Comment: ");
+        StyleConfig.applyStyle(commentLabel);
+        commentTextArea = new JTextArea(5, 20);
+        commentTextArea.setLineWrap(true);
+        commentTextArea.setWrapStyleWord(true);
+        JScrollPane scrollPane = new JScrollPane(commentTextArea);
+        
+        commentPanel.add(commentLabel, BorderLayout.NORTH);
+        commentPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add to form panel
+        formPanel.add(ratingPanel);
+        formPanel.add(commentPanel);
+        
+        // Buttons panel
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        submitButton = new JButton(isEditMode ? "Update Comment" : "Submit Comment");
         StyleConfig.applyStyle(submitButton);
+        submitButton.addActionListener(this);
+        
+        cancelButton = new JButton("Cancel");
         StyleConfig.applyAccentStyle(cancelButton);
+        cancelButton.addActionListener(this);
+        
+        buttonsPanel.add(submitButton);
+        buttonsPanel.add(cancelButton);
+        
+        // Add to main panel
+        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+        
+        // Add to dialog
+        add(mainPanel);
+        
+        setResizable(false);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    }
+    
+    // Load existing comment data for edit mode
+    private void loadExistingComment() {
+        if (existingComment != null) {
+            // Set rating
+            int rating = existingComment.getRating();
+            if (rating >= 1 && rating <= 5) {
+                ratingButtons[rating - 1].setSelected(true);
+            }
+            
+            // Set comment text
+            commentTextArea.setText(existingComment.getComment());
+        }
+    }
+    
+    // Get the selected rating
+    private int getSelectedRating() {
+        for (int i = 0; i < ratingButtons.length; i++) {
+            if (ratingButtons[i].isSelected()) {
+                return i + 1;
+            }
+        }
+        return 5; // Default to 5 stars
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == submitButton) {
-            saveComment();
+            // Get comment text
+            String commentText = commentTextArea.getText().trim();
+            
+            // Validate comment
+            if (commentText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, 
+                        "Please enter a comment.", 
+                        "Validation Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Get rating
+            int rating = getSelectedRating();
+            
+            boolean success;
+            if (isEditMode) {
+                // Update existing comment
+                existingComment.setRating(rating);
+                existingComment.setComment(commentText);
+                existingComment.setCommentDate(new Date()); // Update date to now
+                success = commentDAO.updateComment(existingComment);
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this, 
+                            "Comment updated successfully.", 
+                            "Success", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                            "Failed to update comment.", 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                // Add new comment
+                success = commentDAO.addComment(
+                        room.getRoomId(), 
+                        customer.getUserId(), 
+                        rating, 
+                        commentText,
+                        customer.getFullName());
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this, 
+                            "Comment added successfully.", 
+                            "Success", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                            "Failed to add comment.", 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            
+            // Refresh comments in parent dialog
+            if (success && getParent() instanceof RoomDetailsDialog) {
+                ((RoomDetailsDialog) getParent()).refreshComments();
+            }
+            
+            dispose();
         } else if (e.getSource() == cancelButton) {
             dispose();
-        }
-    }
-    
-    private void saveComment() {
-        // Get rating
-        int rating = 5; // Default
-        for (int i = 0; i < ratingButtons.length; i++) {
-            if (ratingButtons[i].isSelected()) {
-                rating = i + 1;
-                break;
-            }
-        }
-        
-        // Get comment text
-        String commentText = commentTextArea.getText().trim();
-        
-        // Save comment
-        boolean success = commentDAO.addComment(
-            room.getRoomId(),
-            customer.getUserId(),
-            rating,
-            commentText,
-            customer.getFullName()
-        );
-        
-        if (success) {
-            MessageDialog.showInformation(this, "Success", "Your comment has been submitted successfully.");
-            dispose();
-            
-            // Refresh room details if parent is RoomDetailsDialog
-            if (parent instanceof RoomDetailsDialog) {
-                ((RoomDetailsDialog) parent).refreshComments();
-            }
-        } else {
-            MessageDialog.showError(this, "Error", "Failed to submit your comment. Please try again.");
         }
     }
 } 

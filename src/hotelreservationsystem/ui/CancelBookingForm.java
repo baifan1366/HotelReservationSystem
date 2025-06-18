@@ -24,6 +24,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
 
+
 public class CancelBookingForm extends JFrame implements ActionListener {
     private Customer customer;
     private CustomerDashboard dashboard;
@@ -161,29 +162,44 @@ public class CancelBookingForm extends JFrame implements ActionListener {
         int selectedRow = bookingsTable.getSelectedRow();
         
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this,
-                    "Please select a booking to cancel",
-                    "Cancel Error",
-                    JOptionPane.ERROR_MESSAGE);
+            MessageDialog.showError(this, "Cancel Error", "Please select a booking to cancel");
+            return;
+        }
+        
+        // Check if booking is paid
+        String status = (String) bookingsTableModel.getValueAt(selectedRow, 6);
+        if (status.equals("Paid")) {
+            MessageDialog.showError(this, "Cancel Error", "Paid bookings cannot be cancelled");
             return;
         }
         
         int bookingId = (int) bookingsTableModel.getValueAt(selectedRow, 0);
+        int roomNumber = (int) bookingsTableModel.getValueAt(selectedRow, 1);
         
         // Confirm cancellation
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to cancel booking #" + bookingId + "?",
+        boolean confirm = MessageDialog.showConfirmation(this,
                 "Confirm Cancellation",
-                JOptionPane.YES_NO_OPTION);
+                "Are you sure you want to cancel booking #" + bookingId + " for Room " + roomNumber + "?");
         
-        if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = bookingDAO.cancelBooking(bookingId);
+        if (confirm) {
+            // Get the booking first so we can access its data
+            Booking booking = bookingDAO.findBookingByIdAndRoom(bookingId, roomNumber);
+            if (booking == null) {
+                MessageDialog.showError(this, "Cancellation Error", "Booking not found");
+                return;
+            }
+            
+            // Now call the cancelBooking method with both ID and room number
+            boolean success = bookingDAO.cancelBooking(bookingId, roomNumber);
             
             if (success) {
-                JOptionPane.showMessageDialog(this,
-                        "Booking cancelled successfully!",
+                // Save the changes to ensure they persist
+                new hotelreservationsystem.dao.FileManager().saveBookings(
+                    hotelreservationsystem.HotelReservationSystem.getBookings());
+                
+                MessageDialog.showInformation(this,
                         "Cancellation Success",
-                        JOptionPane.INFORMATION_MESSAGE);
+                        "Booking cancelled successfully!");
                 
                 // Refresh booking list
                 loadBookingsData();
@@ -191,10 +207,9 @@ public class CancelBookingForm extends JFrame implements ActionListener {
                 // Refresh dashboard
                 dashboard.refreshDashboard();
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Error cancelling booking",
+                MessageDialog.showError(this,
                         "Cancellation Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error cancelling booking");
             }
         }
     }

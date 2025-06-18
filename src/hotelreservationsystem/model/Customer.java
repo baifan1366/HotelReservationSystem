@@ -60,7 +60,11 @@ public class Customer extends User {
     public void setUsername(String username) {
         this.username = username;
     }
-    
+        
+    public String getUserId() {
+        return super.getUserId();
+    }
+
     @Override
     public String toString() {
         return super.toString() + ", Customer [phone=" + phone + ", address=" + address + "]";

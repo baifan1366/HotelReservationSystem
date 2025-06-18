@@ -34,6 +34,11 @@ public class Booking implements Serializable {
         this.paid = false; // Not paid by default
     }
     
+    // Constructor without bookingId (will be set by the BookingDAO)
+    public Booking(Customer customer, Room room, Date checkInDate, Date checkOutDate) {
+        this(0, customer, room, checkInDate, checkOutDate); // Default ID will be replaced
+    }
+    
     // Method to calculate total bill
     public double calculateTotal() {
         // Calculate number of days
@@ -77,6 +82,10 @@ public class Booking implements Serializable {
 
     public Room getRoom() {
         return room;
+    }
+
+    public int getRoomId() {
+        return room.getRoomId();
     }
 
     public void setRoom(Room room) {
@@ -131,6 +140,44 @@ public class Booking implements Serializable {
     // Method to set cancelled status
     public void setCancelled(boolean cancelled) {
         this.status = !cancelled;
+    }
+    
+    // Get check-in date as formatted string
+    public String getCheckInDateString() {
+        if (checkInDate != null) {
+            return checkInDate.toString();
+        }
+        return "";
+    }
+    
+    // Get check-out date as formatted string
+    public String getCheckOutDateString() {
+        if (checkOutDate != null) {
+            return checkOutDate.toString();
+        }
+        return "";
+    }
+    
+    // Set check-in date from string
+    public void setCheckInDateString(String dateStr) {
+        try {
+            // Simple parsing for demonstration
+            // In a real application, use a proper date parser
+            this.checkInDate = new Date(dateStr);
+        } catch (Exception e) {
+            // Keep existing date if parsing fails
+        }
+    }
+    
+    // Set check-out date from string
+    public void setCheckOutDateString(String dateStr) {
+        try {
+            // Simple parsing for demonstration
+            // In a real application, use a proper date parser
+            this.checkOutDate = new Date(dateStr);
+        } catch (Exception e) {
+            // Keep existing date if parsing fails
+        }
     }
     
     @Override

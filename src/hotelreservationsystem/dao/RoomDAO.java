@@ -101,4 +101,26 @@ public class RoomDAO {
         
         return typeRooms;
     }
+    
+    // Delete a room
+    public boolean deleteRoom(int roomNumber) {
+        Room[] rooms = HotelReservationSystem.getRooms();
+        int roomCount = HotelReservationSystem.getRoomCount();
+        
+        for (int i = 0; i < roomCount; i++) {
+            if (rooms[i].getRoomNumber() == roomNumber) {
+                // Shift all rooms after this one to fill the gap
+                for (int j = i; j < roomCount - 1; j++) {
+                    rooms[j] = rooms[j + 1];
+                }
+                rooms[roomCount - 1] = null;
+                HotelReservationSystem.setRoomCount(roomCount - 1);
+                
+                // Save changes to file
+                new FileManager().saveRooms(rooms);
+                return true;
+            }
+        }
+        return false;
+    }
 }

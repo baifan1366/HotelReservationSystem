@@ -169,4 +169,15 @@ public class DateUtil {
     public static String getTodayAsString() {
         return formatDate(new Date());
     }
+    
+    /**
+     * Get the month from a Date object (0-based, 0 = January, 11 = December)
+     * @param date The date to extract month from
+     * @return Month as an integer (0-11)
+     */
+    public static int getMonth(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar.get(Calendar.MONTH);
+    }
 }

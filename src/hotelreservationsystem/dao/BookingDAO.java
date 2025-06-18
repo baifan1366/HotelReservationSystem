@@ -17,9 +17,29 @@ public class BookingDAO {
     
     // Create a new booking
     public boolean createBooking(Booking booking) {
+        // Set a unique ID for the booking
+        int nextId = getNextBookingId();
+        booking.setBookingId(nextId);
+        
         // Add booking to the system
         HotelReservationSystem.addBooking(booking);
         return true;
+    }
+    
+    // Get the next available booking ID
+    public int getNextBookingId() {
+        Booking[] bookings = HotelReservationSystem.getBookings();
+        int bookingCount = HotelReservationSystem.getBookingCount();
+        int maxId = 1000; // Start from 1000 if no bookings exist
+        
+        for (int i = 0; i < bookingCount; i++) {
+            if (bookings[i] != null && bookings[i].getBookingId() > maxId) {
+                maxId = bookings[i].getBookingId();
+            }
+        }
+        
+        // Next ID is max + 1
+        return maxId + 1;
     }
     
     // Get bookings for a specific customer
@@ -62,7 +82,45 @@ public class BookingDAO {
         return null;
     }
     
+    // Find booking by ID and room number for more precision
+    public Booking findBookingByIdAndRoom(int bookingId, int roomNumber) {
+        Booking[] bookings = HotelReservationSystem.getBookings();
+        int bookingCount = HotelReservationSystem.getBookingCount();
+        
+        for (int i = 0; i < bookingCount; i++) {
+            if (bookings[i].getBookingId() == bookingId && 
+                bookings[i].getRoom().getRoomNumber() == roomNumber) {
+                return bookings[i];
+            }
+        }
+        return null;
+    }
+    
     // Cancel booking
+    public boolean cancelBooking(int bookingId, int roomNumber) {
+        Booking[] bookings = HotelReservationSystem.getBookings();
+        int bookingCount = HotelReservationSystem.getBookingCount();
+        
+        for (int i = 0; i < bookingCount; i++) {
+            if (bookings[i].getBookingId() == bookingId && 
+                bookings[i].getRoom().getRoomNumber() == roomNumber && 
+                !bookings[i].isCancelled()) {
+                
+                // Mark booking as cancelled
+                bookings[i].setCancelled(true);
+                
+                // Make room available
+                bookings[i].getRoom().setStatus(true);
+                
+                // Save changes
+                new FileManager().saveBookings(bookings);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // Overloaded method for backward compatibility
     public boolean cancelBooking(int bookingId) {
         Booking[] bookings = HotelReservationSystem.getBookings();
         int bookingCount = HotelReservationSystem.getBookingCount();
@@ -71,6 +129,9 @@ public class BookingDAO {
             if (bookings[i].getBookingId() == bookingId && !bookings[i].isCancelled()) {
                 // Mark booking as cancelled
                 bookings[i].setCancelled(true);
+                
+                // Make room available
+                bookings[i].getRoom().setStatus(true);
                 
                 // Save changes
                 new FileManager().saveBookings(bookings);
@@ -134,5 +195,57 @@ public class BookingDAO {
         }
         
         return roomBookings;
+    }
+    
+    /**
+     * Get a booking by its ID (String version)
+     * @param bookingId The booking ID as a string
+     * @return The booking or null if not found
+     */
+    public Booking getBookingById(String bookingId) {
+        try {
+            int id = Integer.parseInt(bookingId);
+            return findBookingById(id);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Update an existing booking
+     * @param booking The booking to update
+     * @return true if successful, false otherwise
+     */
+    public boolean updateBooking(Booking booking) {
+        Booking[] bookings = HotelReservationSystem.getBookings();
+        int bookingCount = HotelReservationSystem.getBookingCount();
+        
+        for (int i = 0; i < bookingCount; i++) {
+            if (bookings[i].getBookingId() == booking.getBookingId() && 
+                !bookings[i].isCancelled()) {
+                
+                // Update only payment status, not dates
+                bookings[i].setPaid(booking.isPaid()); 
+                
+                // Save changes
+                new FileManager().saveBookings(bookings);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Cancel a booking by its ID (String version)
+     * @param bookingId The booking ID as a string
+     * @return true if successful, false otherwise
+     */
+    public boolean cancelBooking(String bookingId) {
+        try {
+            int id = Integer.parseInt(bookingId);
+            return cancelBooking(id);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

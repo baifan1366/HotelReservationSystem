@@ -207,4 +207,9 @@ public class HotelReservationSystem {
     public static void setUserCount(int count) {
         userCount = count;
     }
+    
+    // Room count setter
+    public static void setRoomCount(int count) {
+        roomCount = count;
+    }
 }

@@ -52,7 +52,6 @@ public class BookingForm extends JFrame implements ActionListener {
     private JLabel bedDouble, alarmClock, brushCleaning, cigaretteOff, utensils;
     private JLabel airplay, carTaxiFront, conciergeBell, plane;
     
-    private static int bookingIdCounter = 1000;
     ImageIcon icons[] = {
         new ImageIcon(getClass().getResource("/image/circle-check.png")),
         new ImageIcon(getClass().getResource("/image/circle-x.png")),
@@ -736,11 +735,10 @@ public class BookingForm extends JFrame implements ActionListener {
             
             // Create booking
             Booking booking = new Booking(
-                    bookingIdCounter++, 
-                    customer, 
-                    room, 
-                    checkInDate, 
-                    checkOutDate);
+                customer, 
+                room, 
+                checkInDate, 
+                checkOutDate);
             
             // Save booking
             boolean success = bookingDAO.createBooking(booking);

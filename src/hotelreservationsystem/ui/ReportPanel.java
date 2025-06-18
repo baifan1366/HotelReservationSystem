@@ -11,11 +11,14 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
 import java.text.ParseException;
 import java.util.Date;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -25,6 +28,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ImageIcon;
 import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ReportPanel extends JFrame implements ActionListener {
     private JComboBox<String> reportTypeComboBox;
@@ -32,11 +36,16 @@ public class ReportPanel extends JFrame implements ActionListener {
     private JTextField endDateField;
     private JButton generateButton;
     private JButton backButton;
+    private JButton exportPdfButton;
+    private JButton exportCsvButton;
     private JTextArea reportTextArea;
+    private Report currentReport;
     ImageIcon icons[] = {
         new ImageIcon(getClass().getResource("/image/clipboard-list.png")),
         new ImageIcon(getClass().getResource("/image/circle-check.png")),
-        new ImageIcon(getClass().getResource("/image/circle-x.png"))
+        new ImageIcon(getClass().getResource("/image/circle-x.png")),
+        new ImageIcon(getClass().getResource("/image/file-plus-2.png")),
+        new ImageIcon(getClass().getResource("/image/file-input.png"))
     };
     public ReportPanel() {
         initComponents();
@@ -72,7 +81,11 @@ public class ReportPanel extends JFrame implements ActionListener {
             "Booking Summary Report",
             "Room Occupancy Report",
             "Payment Method Report",
-            "Revenue Report"
+            "Revenue Report",
+            "Popular Room Types Report",
+            "Cancellation Analysis Report",
+            "Guest Feedback Report",
+            "Monthly Revenue Comparison"
         });
         reportTypeComboBox.addActionListener(this);
         StyleConfig.applyStyle(reportTypeLabel);
@@ -98,7 +111,7 @@ public class ReportPanel extends JFrame implements ActionListener {
         formPanel.add(endDateField);
         
         // Button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 10, 0));
         
         // Generate report button
         generateButton = new JButton("Generate");
@@ -110,6 +123,30 @@ public class ReportPanel extends JFrame implements ActionListener {
         generateButton.setIconTextGap(10);
         StyleConfig.applyStyle(generateButton);
         buttonPanel.add(generateButton);
+        
+        // Export PDF Button
+        exportPdfButton = new JButton("Export PDF");
+        exportPdfButton.addActionListener(this);
+        exportPdfButton.setIcon(icons[3]);
+        exportPdfButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        exportPdfButton.setVerticalTextPosition(SwingConstants.CENTER);
+        exportPdfButton.setHorizontalAlignment(SwingConstants.CENTER);
+        exportPdfButton.setIconTextGap(10);
+        exportPdfButton.setEnabled(false);
+        StyleConfig.applyStyle(exportPdfButton);
+        buttonPanel.add(exportPdfButton);
+        
+        // Export CSV Button
+        exportCsvButton = new JButton("Export CSV");
+        exportCsvButton.addActionListener(this);
+        exportCsvButton.setIcon(icons[4]);
+        exportCsvButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        exportCsvButton.setVerticalTextPosition(SwingConstants.CENTER);
+        exportCsvButton.setHorizontalAlignment(SwingConstants.CENTER);
+        exportCsvButton.setIconTextGap(10);
+        exportCsvButton.setEnabled(false);
+        StyleConfig.applyStyle(exportCsvButton);
+        buttonPanel.add(exportCsvButton);
         
         // Back button
         backButton = new JButton("Cancel");
@@ -164,6 +201,10 @@ public class ReportPanel extends JFrame implements ActionListener {
             generateReport();
         } else if (e.getSource() == backButton) {
             dispose();
+        } else if (e.getSource() == exportPdfButton) {
+            exportToPdf();
+        } else if (e.getSource() == exportCsvButton) {
+            exportToCsv();
         }
     }
     
@@ -203,6 +244,18 @@ public class ReportPanel extends JFrame implements ActionListener {
                 case "Revenue Report":
                     report = ReportGenerator.generateRevenueReport(startDate, endDate);
                     break;
+                case "Popular Room Types Report":
+                    report = ReportGenerator.generatePopularRoomTypesReport(startDate, endDate);
+                    break;
+                case "Cancellation Analysis Report":
+                    report = ReportGenerator.generateCancellationAnalysisReport(startDate, endDate);
+                    break;
+                case "Guest Feedback Report":
+                    report = ReportGenerator.generateGuestFeedbackReport(startDate, endDate);
+                    break;
+                case "Monthly Revenue Comparison":
+                    report = ReportGenerator.generateMonthlyComparisonReport(startDate, endDate);
+                    break;
                 default:
                     JOptionPane.showMessageDialog(this, 
                             "Please select a report type", 
@@ -212,7 +265,10 @@ public class ReportPanel extends JFrame implements ActionListener {
             }
             
             if (report != null) {
+                currentReport = report;
                 displayReport(report);
+                exportPdfButton.setEnabled(true);
+                exportCsvButton.setEnabled(true);
             } else {
                 JOptionPane.showMessageDialog(this, 
                     "Failed to generate report. Report came back as null.", 
@@ -254,5 +310,113 @@ public class ReportPanel extends JFrame implements ActionListener {
         }
         
         reportTextArea.setText(sb.toString());
+    }
+    
+    /**
+     * Export the current report to a PDF file
+     */
+    private void exportToPdf() {
+        if (currentReport == null) {
+            JOptionPane.showMessageDialog(this, 
+                    "Generate a report first", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save PDF File");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF Files", "pdf"));
+        fileChooser.setSelectedFile(new File(currentReport.getTitle().replace(" ", "_") + ".pdf"));
+        
+        int userSelection = fileChooser.showSaveDialog(this);
+        
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+            if (!filePath.toLowerCase().endsWith(".pdf")) {
+                filePath += ".pdf";
+            }
+            
+            try {
+                ReportGenerator.exportToPdf(currentReport, filePath);
+                JOptionPane.showMessageDialog(this, 
+                        "Report exported successfully to PDF file: " + filePath, 
+                        "Export Successful", 
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                        "Error exporting to PDF: " + e.getMessage(), 
+                        "Export Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * Export the current report to a CSV file
+     */
+    private void exportToCsv() {
+        if (currentReport == null) {
+            JOptionPane.showMessageDialog(this, 
+                    "Generate a report first", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save CSV File");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
+        fileChooser.setSelectedFile(new File(currentReport.getTitle().replace(" ", "_") + ".csv"));
+        
+        int userSelection = fileChooser.showSaveDialog(this);
+        
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+            if (!filePath.toLowerCase().endsWith(".csv")) {
+                filePath += ".csv";
+            }
+            
+            try {
+                ReportGenerator.exportToCsv(currentReport, filePath);
+                JOptionPane.showMessageDialog(this, 
+                        "Report exported successfully to CSV file: " + filePath, 
+                        "Export Successful", 
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                        "Error exporting to CSV: " + e.getMessage(), 
+                        "Export Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * For testing export functionality
+     */
+    public static void main(String[] args) {
+        try {
+            // Set look and feel
+            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+            
+            // Create and show report panel
+            ReportPanel reportPanel = new ReportPanel();
+            reportPanel.setVisible(true);
+            
+            // Show message about PDF export
+            JOptionPane.showMessageDialog(reportPanel, 
+                    "Note: To use PDF export, you need to add the iText PDF library.\n" +
+                    "Please see the instructions in the lib/pdf/README.txt file.",
+                    "PDF Library Required",
+                    JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
