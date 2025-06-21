@@ -67,7 +67,7 @@ public class CommentForm extends JDialog implements ActionListener {
     }
     
     private void initComponents() {
-        setSize(400, 400);
+        setSize(600, 400);
         setLocationRelativeTo(getParent());
         setLayout(new BorderLayout(10, 10));
         
@@ -90,15 +90,48 @@ public class CommentForm extends JDialog implements ActionListener {
         StyleConfig.applyStyle(ratingLabel);
         ratingPanel.add(ratingLabel);
         
-        // Rating buttons
+        // Rating buttons with icons
         ButtonGroup ratingGroup = new ButtonGroup();
         ratingButtons = new JRadioButton[5];
         
+        // Custom labels with star rating and corresponding icons
+        String[] ratingLabels = {
+            "1 ★ Poor",
+            "2 ★ Fair", 
+            "3 ★ Good", 
+            "4 ★ Very Good", 
+            "5 ★ Excellent"
+        };
+        
+        // Create rating panel with radio buttons and icons displayed side by side
         for (int i = 0; i < 5; i++) {
-            ratingButtons[i] = new JRadioButton((i + 1) + " ★");
+            // Create panel for each rating option
+            JPanel ratingOptionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            
+            // Add icon before radio button for 1-star rating (angry face)
+            if (i == 0) { // 1 star - angry
+                JLabel angryIconLabel = new JLabel();
+                angryIconLabel.setIcon(icons[1]); // angry icon
+                ratingOptionPanel.add(angryIconLabel);
+            }
+            
+            // Create radio button without icon
+            ratingButtons[i] = new JRadioButton(ratingLabels[i]);
             StyleConfig.applyStyle(ratingButtons[i]);
             ratingGroup.add(ratingButtons[i]);
-            ratingPanel.add(ratingButtons[i]);
+            
+            // Add radio button to the option panel
+            ratingOptionPanel.add(ratingButtons[i]);
+            
+            // Add smile icon after radio button for 5-star rating
+            if (i == 4) { // 5 stars - smile
+                JLabel smileIconLabel = new JLabel();
+                smileIconLabel.setIcon(icons[0]); // smile icon
+                ratingOptionPanel.add(smileIconLabel);
+            }
+            
+            // Add the option panel to the rating panel
+            ratingPanel.add(ratingOptionPanel);
         }
         
         // Default select 5 stars
@@ -126,10 +159,12 @@ public class CommentForm extends JDialog implements ActionListener {
         submitButton = new JButton(isEditMode ? "Update Comment" : "Submit Comment");
         StyleConfig.applyStyle(submitButton);
         submitButton.addActionListener(this);
+        submitButton.setIcon(new ImageIcon(getClass().getResource("/image/check.png")));
         
         cancelButton = new JButton("Cancel");
         StyleConfig.applyAccentStyle(cancelButton);
         cancelButton.addActionListener(this);
+        cancelButton.setIcon(new ImageIcon(getClass().getResource("/image/circle-x.png")));
         
         buttonsPanel.add(submitButton);
         buttonsPanel.add(cancelButton);

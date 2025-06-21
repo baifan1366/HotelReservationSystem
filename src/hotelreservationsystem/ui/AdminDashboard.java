@@ -587,6 +587,14 @@ public class AdminDashboard extends JFrame implements ActionListener {
                 return;
             }
             
+            // Check if room has active bookings
+            if (!room.isAvailable()) {
+                JOptionPane.showMessageDialog(this, 
+                    "Cannot edit room #" + roomNumber + " because it is currently booked.", 
+                    "Room in Use", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
             // Create edit room dialog
             JDialog dialog = new JDialog(this, "Edit Room", true);
             dialog.setSize(400, 300);
